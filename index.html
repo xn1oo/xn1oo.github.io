@@ -30,7 +30,7 @@
       text-align: center;
       z-index: 1;
 
-      /* Neon white glow effect */
+      /* Neon white glow */
       text-shadow: 
         0 0 5px #ffffff,
         0 0 10px #ffffff,
@@ -62,13 +62,51 @@
         transform: translate(-50%, -50%) scale(1.1);
       }
     }
+
+    /* Music controls styling */
+    .music-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: Arial, sans-serif;
+    }
+    button {
+      padding: 10px 20px;
+      background: white;
+      color: black;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    input[type="range"] {
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <canvas id="stars"></canvas>
   <div class="center-text">X N 1 O O</div>
 
+  <!-- Music -->
+  <audio id="bg-music" loop>
+    <source src="Waiting - Leverfall.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- Music controls -->
+  <div class="music-controls">
+    <button id="playPause">Play</button>
+    <label>Volume: <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5"></label>
+  </div>
+
   <script>
+    // Starry background
     const canvas = document.getElementById("stars");
     const ctx = canvas.getContext("2d");
 
@@ -110,6 +148,33 @@
       requestAnimationFrame(animate);
     }
     animate();
+
+    // Music controls
+    const music = document.getElementById("bg-music");
+    const playPauseBtn = document.getElementById("playPause");
+    const volumeSlider = document.getElementById("volume");
+
+    playPauseBtn.addEventListener("click", () => {
+      if (music.paused) {
+        music.play();
+        playPauseBtn.textContent = "Pause";
+      } else {
+        music.pause();
+        playPauseBtn.textContent = "Play";
+      }
+    });
+
+    volumeSlider.addEventListener("input", () => {
+      music.volume = volumeSlider.value;
+    });
+
+    // Optional: auto-play on first click anywhere (browser restriction)
+    document.body.addEventListener('click', () => {
+      if (music.paused) {
+        music.play();
+        playPauseBtn.textContent = "Pause";
+      }
+    }, { once: true });
   </script>
 </body>
 </html>
