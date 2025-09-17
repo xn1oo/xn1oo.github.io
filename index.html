@@ -2,209 +2,200 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>X N 1 O O</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XN1OO</title>
   <style>
-    html, body {
+    body {
       margin: 0;
-      height: 100%;
-      overflow: hidden;
+      height: 100vh;
       background: black;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
       color: white;
-      font-family: 'Courier New', monospace; /* pixel/retro feel */
+      font-family: Arial, sans-serif;
     }
 
-    canvas {
-      position: absolute;
+    /* Starry background */
+    canvas#stars {
+      position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      display: block;
+      z-index: -1;
     }
 
-    /* Center Neon Text */
-    .center-text {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+    /* Center glowing text */
+    #centerText {
       font-size: 4rem;
-      letter-spacing: 1rem;
       color: white;
-      text-align: center;
-      z-index: 1;
-      text-shadow: 
-        0 0 5px #ffffff,
-        0 0 10px #ffffff,
-        0 0 20px #ffffff,
-        0 0 40px #ffffff,
-        0 0 80px #ffffff;
-      animation: pulse 2.5s infinite alternate;
-      transition: all 2s ease;
+      text-shadow: 0 0 20px white, 0 0 40px white;
+      animation: pulse 2s infinite alternate;
+      transition: all 1s ease-in-out;
     }
 
     @keyframes pulse {
-      0% {
-        text-shadow: 0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff;
-        transform: translate(-50%, -50%) scale(1);
-      }
-      100% {
-        text-shadow: 0 0 15px #ffffff, 0 0 30px #ffffff, 0 0 60px #ffffff;
-        transform: translate(-50%, -50%) scale(1.1);
-      }
+      from { text-shadow: 0 0 10px white, 0 0 20px white; }
+      to { text-shadow: 0 0 20px white, 0 0 40px white; }
     }
 
-    /* Play Button */
-    .play-button {
+    /* Play button */
+    #playButton {
       position: absolute;
-      top: 70%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      bottom: 20%;
+      opacity: 0;
+      visibility: hidden;
+      padding: 10px 20px;
       width: 120px;
-      height: 23px;
-      border-radius: 12px;
-      border: 2px solid white;
+      height: 40px;
+      border: none;
+      border-radius: 20px;
       background: black;
       color: white;
       font-size: 1rem;
-      font-family: 'Trebuchet MS', sans-serif;
-      text-align: center;
-      line-height: 23px;
+      font-family: "Courier New", monospace;
+      text-shadow: 0 0 10px white, 0 0 20px white;
       cursor: pointer;
-      text-shadow: 0 0 5px #fff, 0 0 15px #fff;
-      box-shadow: 0 0 10px #fff, 0 0 30px #fff;
-      opacity: 0;
-      z-index: 2;
-      animation: pulseButton 2s infinite alternate;
-      transition: opacity 1s ease, transform 1s ease;
+      animation: pulse 2s infinite alternate;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
     }
 
-    @keyframes pulseButton {
-      0% { box-shadow: 0 0 10px #fff; }
-      100% { box-shadow: 0 0 25px #fff, 0 0 50px #fff; }
+    /* Show play button after delay */
+    #playButton.show {
+      opacity: 1;
+      visibility: visible;
     }
 
-    .fade-out {
-      opacity: 0;
-      pointer-events: none;
+    /* Fade out */
+    .fadeOut {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      transition: opacity 1s ease, visibility 1s ease;
+    }
+
+    /* Move text up + shrink */
+    .moveUp {
+      transform: translateY(-150px) scale(0.7);
     }
 
     /* Moon */
-    .moon {
+    #moon {
       position: absolute;
-      top: 40px;
-      right: 60px;
-      width: 100px;
-      display: none;
-      z-index: 1;
+      top: 50px;
+      right: 100px;
+      width: 60px;
+      height: 60px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 0 20px white, 0 0 40px white;
+      opacity: 0;
+      transition: opacity 1.5s ease;
     }
 
     /* Bench */
-    .bench {
+    #bench {
       position: absolute;
-      bottom: 40px;
+      bottom: 50px;
       left: 50%;
       transform: translateX(-50%);
-      width: 200px;
-      display: none;
-      z-index: 1;
+      font-family: monospace;
+      font-size: 1.5rem;
+      color: gray;
+      text-shadow: 0 0 10px white, 0 0 20px white;
+      opacity: 0;
+      transition: opacity 1.5s ease;
     }
 
     /* Timer */
-    .timer {
+    #timer {
       position: absolute;
       bottom: 10px;
       left: 10px;
+      font-family: "Courier New", monospace;
       font-size: 1rem;
       color: white;
-      text-shadow: 0 0 5px #fff, 0 0 15px #fff;
-      display: none;
+      text-shadow: 0 0 10px white, 0 0 20px white;
     }
   </style>
 </head>
 <body>
   <canvas id="stars"></canvas>
-  <div class="center-text" id="centerText">X N 1 O O</div>
-  <div class="play-button" id="playButton">PLAY</div>
-  <img src="moon.png" alt="Moon" class="moon" id="moon">
-  <img src="bench.png" alt="Bench" class="bench" id="bench">
-  <div class="timer" id="timer">Time: 0 minutes</div>
+
+  <div id="centerText">X N 1 O O</div>
+  <button id="playButton">PLAY</button>
+  <div id="moon"></div>
+  <div id="bench">🪑</div>
+  <div id="timer">Time: 0 min</div>
 
   <script>
-    // Starry Background
-    const canvas = document.getElementById("stars");
-    const ctx = canvas.getContext("2d");
+    // Star background
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-
-    const stars = [];
-    const numStars = 200;
-    for (let i = 0; i < numStars; i++) {
+    let stars = [];
+    for (let i = 0; i < 200; i++) {
       stars.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        radius: Math.random() * 1.5,
-        dx: (Math.random() - 0.5) * 0.2,
-        dy: (Math.random() - 0.5) * 0.2
+        size: Math.random() * 2,
+        speed: Math.random() * 0.5
       });
     }
 
-    function animate() {
+    function drawStars() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "white";
-      for (let star of stars) {
+      stars.forEach(star => {
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fill();
-        star.x += star.dx;
-        star.y += star.dy;
-        if (star.x < 0) star.x = canvas.width;
-        if (star.x > canvas.width) star.x = 0;
-        if (star.y < 0) star.y = canvas.height;
-        if (star.y > canvas.height) star.y = 0;
-      }
-      requestAnimationFrame(animate);
+        star.y += star.speed;
+        if (star.y > canvas.height) {
+          star.y = 0;
+          star.x = Math.random() * canvas.width;
+        }
+      });
+      requestAnimationFrame(drawStars);
     }
-    animate();
+    drawStars();
 
-    // Play Button logic
+    // Show play button after 2s
     const playButton = document.getElementById("playButton");
     const centerText = document.getElementById("centerText");
     const moon = document.getElementById("moon");
     const bench = document.getElementById("bench");
-    const timer = document.getElementById("timer");
 
-    // Show play button after 2s
     setTimeout(() => {
-      playButton.style.opacity = 1;
+      playButton.classList.add("show");
     }, 2000);
 
     playButton.addEventListener("click", () => {
       // Fade out play button
-      playButton.classList.add("fade-out");
+      playButton.classList.remove("show");
+      playButton.classList.add("fadeOut");
 
-      // Move center text up + shrink
-      centerText.style.transform = "translate(-50%, -200%) scale(0.7)";
+      // Move text up
+      centerText.classList.add("moveUp");
 
-      // Show moon & bench after animation
+      // Show moon and bench after delay
       setTimeout(() => {
-        moon.style.display = "block";
-        bench.style.display = "block";
-        timer.style.display = "block";
-      }, 1500);
-
-      // Timer logic
-      let minutes = 0;
-      setInterval(() => {
-        minutes++;
-        timer.textContent = `Time: ${minutes} minutes`;
-      }, 60000);
+        moon.style.opacity = 1;
+        bench.style.opacity = 1;
+      }, 1200);
     });
+
+    // Timer
+    let minutes = 0;
+    const timer = document.getElementById("timer");
+    setInterval(() => {
+      minutes++;
+      timer.textContent = "Time: " + minutes + " min";
+    }, 60000);
   </script>
 </body>
 </html>
