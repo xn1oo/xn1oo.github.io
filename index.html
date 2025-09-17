@@ -307,18 +307,31 @@ function startNamePrompt(){
 // ===== GLOBAL LEADERBOARD =====
 function showGlobalLeaderboard(){
   leaderboard.style.display="block";  
+  const storedName = localStorage.getItem("xn1ooName"); // get current user
+
   database.ref('users').on('value', (snapshot)=>{
     const data = snapshot.val();
     if(!data) return;
+
     const sortedUsers = Object.values(data).sort((a,b)=>b.time - a.time);
     leaderboard.innerHTML = "<strong>Leaderboard:</strong><br>";
+
     sortedUsers.forEach((u,i)=>{
       const entry = document.createElement("div");
       entry.textContent = `${i+1}. ${u.name}: ${u.time} min`;
+
+      // Highlight current user
+      if(u.name === storedName){
+        entry.style.color = "#00ffff"; // cyan color for glow effect
+        entry.style.textShadow = "0 0 5px #00ffff, 0 0 10px #00ffff";
+        entry.style.fontWeight = "bold";
+      }
+
       leaderboard.appendChild(entry);
     });
   });
 }
+
 
 // Call current user name on load
 window.addEventListener("load", updateCurrentUserName);
