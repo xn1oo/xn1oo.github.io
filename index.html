@@ -8,14 +8,14 @@
     body {
       margin: 0;
       height: 100vh;
-      background: linear-gradient(to bottom, #0d0d2b, #000000); /* gradient background */
+      background: linear-gradient(to bottom, #0d0d2b, #000000);
       overflow: hidden;
       display: flex;
       justify-content: center;
       align-items: center;
       flex-direction: column;
       color: white;
-      font-family: Arial, sans-serif;
+      font-family: "Courier New", monospace;
     }
 
     /* Starry background */
@@ -64,20 +64,17 @@
       transition: opacity 0.8s ease, visibility 0.8s ease;
     }
 
-    /* Show play button after delay */
     #playButton.show {
       opacity: 1;
       visibility: visible;
     }
 
-    /* Fade out */
     .fadeOut {
       opacity: 0 !important;
       visibility: hidden !important;
       transition: opacity 1s ease, visibility 1s ease;
     }
 
-    /* Move text up + shrink */
     .moveUp {
       transform: translateY(-150px) scale(0.7);
     }
@@ -94,6 +91,26 @@
       box-shadow: 0 0 20px white, 0 0 40px white;
       opacity: 0;
       transition: opacity 2s ease;
+    }
+
+    /* Typing effect */
+    #typingBox {
+      margin-top: 40px;
+      font-size: 1.2rem;
+      white-space: pre-line;
+      text-shadow: 0 0 10px white, 0 0 20px white;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 10px;
+      background: white;
+      margin-left: 2px;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      50% { background: transparent; }
     }
 
     /* Timer */
@@ -114,6 +131,7 @@
   <div id="centerText">X N 1 O O</div>
   <button id="playButton">PLAY</button>
   <div id="moon"></div>
+  <div id="typingBox"><span id="typedText"></span><span class="cursor"></span></div>
   <div id="timer">Time: 0 min</div>
 
   <script>
@@ -154,6 +172,7 @@
     const playButton = document.getElementById("playButton");
     const centerText = document.getElementById("centerText");
     const moon = document.getElementById("moon");
+    const typedText = document.getElementById("typedText");
 
     setTimeout(() => {
       playButton.classList.add("show");
@@ -167,8 +186,62 @@
 
       setTimeout(() => {
         moon.style.opacity = 1;
+
+        // Start typing after moon fade
+        setTimeout(startTyping, 2000);
       }, 1200);
     });
+
+    // Typing effect
+    const messages = [
+      ["Welcome,", 1000, " to my Website."],
+      ["I Created this while I was sick at home,", 1000, " and also because I was bored."],
+      ["But anyways just sit here and just do whatever"]
+    ];
+
+    let msgIndex = 0;
+    let partIndex = 0;
+
+    function typeLine(line, callback) {
+      let i = 0;
+      function typeChar() {
+        if (i < line.length) {
+          typedText.textContent += line.charAt(i);
+          i++;
+          setTimeout(typeChar, 50);
+        } else {
+          callback();
+        }
+      }
+      typeChar();
+    }
+
+    function startTyping() {
+      if (msgIndex < messages.length) {
+        const parts = messages[msgIndex];
+        function typeNextPart() {
+          if (partIndex < parts.length) {
+            if (typeof parts[partIndex] === "string") {
+              typeLine(parts[partIndex], () => {
+                partIndex++;
+                typeNextPart();
+              });
+            } else if (typeof parts[partIndex] === "number") {
+              setTimeout(() => {
+                partIndex++;
+                typeNextPart();
+              }, parts[partIndex]);
+            }
+          } else {
+            msgIndex++;
+            partIndex = 0;
+            typedText.textContent += "\n"; // new line
+            startTyping();
+          }
+        }
+        typeNextPart();
+      }
+    }
 
     // Timer
     let minutes = 0;
