@@ -1,22 +1,21 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>X N 1 O O</title>
 <style>
   :root{
     --glow: #ffffff;
     --accent: #00ffff;
-    --store-bg: rgba(255,255,255,0.04);
+    --store-bg: rgba(255,255,255,0.03);
   }
-
   html,body{height:100%;margin:0;font-family:"Courier New",monospace;background:linear-gradient(180deg,#071028,#000);color:#fff;overflow:hidden}
 
-  /* --- Stars canvas full screen --- */
+  /* canvas stars */
   #stars{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
 
-  /* --- Center neon text --- */
+  /* center text */
   .center-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;pointer-events:none}
   #centerText{
     pointer-events:none;
@@ -29,32 +28,24 @@
     will-change:transform;
     user-select:none;
   }
-
-  /* small pulse animation for texts */
   .glow-pulse{animation:glowPulse 2.5s infinite alternate}
   @keyframes glowPulse{
     from{text-shadow:0 0 8px var(--glow),0 0 20px var(--glow)}
     to{text-shadow:0 0 16px var(--glow),0 0 40px var(--glow)}
   }
 
-  /* --- Play button --- */
+  /* play button */
   #playButton{
-    position:fixed;
-    z-index:6;
-    left:50%;
-    transform:translateX(-50%);
-    bottom:18vh;
-    width:120px;height:32px;border-radius:16px;
-    background: rgba(0,0,0,0.6); border:2px solid rgba(255,255,255,0.9);
-    color:white; font-weight:700; cursor:pointer;
-    box-shadow:0 0 10px rgba(255,255,255,0.08), 0 0 30px rgba(255,255,255,0.05);
+    position:fixed; z-index:6; left:50%; transform:translateX(-50%); bottom:18vh;
+    width:120px;height:32px;border-radius:16px;background:rgba(0,0,0,0.6); border:2px solid rgba(255,255,255,0.9);
+    color:white; font-weight:700; cursor:pointer; box-shadow:0 0 10px rgba(255,255,255,0.08);
     display:none; align-items:center; justify-content:center;
   }
   #playButton.show{display:flex; animation:btnPulse 2s infinite alternate}
   @keyframes btnPulse{from{box-shadow:0 0 8px rgba(255,255,255,0.12)} to{box-shadow:0 0 20px rgba(255,255,255,0.24)}}
   #playButton:active{transform:translateX(-50%) scale(.98)}
 
-  /* --- Moon (pixel style) --- */
+  /* moon */
   #moon{
     position:fixed; z-index:6; top:48px; right:80px; width:72px; height:72px; border-radius:50%;
     background: radial-gradient(circle at 35% 30%, #fff 0%, #dcdcdc 20%, #bbb 60%, transparent 61%), transparent;
@@ -62,33 +53,27 @@
     display:none; cursor:pointer;
   }
 
-  /* --- Typing / messages area --- */
+  /* typing area */
   #typingArea{
     position:fixed; z-index:6; bottom:28vh; left:50%; transform:translateX(-50%); width:80%; max-width:900px;
-    color:white; font-size:1.05rem; text-align:center; white-space:pre-wrap; pointer-events:auto;
-    text-shadow:0 0 6px var(--glow);
+    color:white; font-size:1.05rem; text-align:center; white-space:pre-wrap; pointer-events:auto; text-shadow:0 0 6px var(--glow);
   }
   .typing-cursor{display:inline-block;width:10px;height:1.2rem;background:var(--glow);vertical-align:middle;margin-left:6px;animation:blink 1s steps(1) infinite}
   @keyframes blink{50%{opacity:0}}
 
-  /* --- Leaderboard --- */
-  #leaderboard{
-    position:fixed; z-index:6; top:20px; left:20px; width:230px; font-size:0.95rem;
-    text-shadow:0 0 6px var(--glow); display:none;
-    background: rgba(0,0,0,0.15); padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.06);
-  }
+  /* leaderboard */
+  #leaderboard{position:fixed; z-index:6; top:20px; left:20px; width:230px; font-size:0.95rem; text-shadow:0 0 6px var(--glow); display:none;
+    background: rgba(0,0,0,0.15); padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.06);}
   #leaderboard strong{display:block;margin-bottom:8px}
-
-  /* highlight current user */
   .lb-current{color:var(--accent); text-shadow:0 0 8px var(--accent); font-weight:700}
 
-  /* --- Current user & timer at bottom-left --- */
+  /* user & timer */
   #currentUser{position:fixed; left:14px; bottom:52px; z-index:6; font-size:0.95rem; text-shadow:0 0 6px var(--glow)}
   #timer{position:fixed; left:14px; bottom:26px; z-index:6; font-size:0.95rem; text-shadow:0 0 6px var(--glow)}
 
-  /* --- Store GUI (frosted glass) --- */
+  /* store GUI */
   #storeGUI{
-    position:fixed; z-index:10; top:110px; left:100px; width:520px; height:auto; min-height:120px;
+    position:fixed; z-index:10; top:110px; left:100px; width:520px; min-height:120px;
     background: rgba(255,255,255,0.03); backdrop-filter: blur(14px); border-radius:12px; padding:10px;
     border:1px solid rgba(255,255,255,0.08); box-shadow:0 6px 30px rgba(0,0,0,0.6), 0 0 20px rgba(255,255,255,0.04);
     display:none; cursor:grab; overflow:hidden;
@@ -103,7 +88,6 @@
   .storeItem{padding:6px 8px; cursor:pointer; transition:all .14s; user-select:none}
   .storeItem:hover{color:var(--accent); text-shadow:0 0 8px var(--accent)}
 
-  /* small UI polish on mobile */
   @media (max-width:640px){
     #storeGUI{left:12px; right:12px; width:auto}
     #leaderboard{left:8px; width:160px}
@@ -112,21 +96,18 @@
 </style>
 </head>
 <body>
-  <!-- Stars canvas -->
   <canvas id="stars"></canvas>
 
-  <!-- Center / UI -->
   <div class="center-wrap"><div id="centerText" class="glow-pulse">X N 1 O O</div></div>
   <button id="playButton" class="glow-pulse">PLAY</button>
   <div id="moon" title="Open Store"></div>
 
   <div id="typingArea"></div>
 
-  <div id="leaderboard"><strong>Leaderboard</strong><div id="lbList"></div></div>
-  <div id="currentUser">Your name: (not set)</div>
-  <div id="timer">Time: 0 min</div>
+  <div id="leaderboard"><strong class="glow-pulse">Leaderboard</strong><div id="lbList"></div></div>
+  <div id="currentUser" class="glow-pulse">Your name: (not set)</div>
+  <div id="timer" class="glow-pulse">Time: 0 min</div>
 
-  <!-- Store -->
   <div id="storeGUI" aria-hidden="true">
     <div id="storeHeader" class="glow-pulse">Store</div>
 
@@ -151,16 +132,14 @@
     </div>
   </div>
 
-  <!-- Firebase SDK (compat) -->
+  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <script>
-  /* =========================
-     STABLE APP JS (single file)
-     ========================= */
+  /* ===== stable app script ===== */
 
-  // ---------- Firebase config (YOUR values inserted) ----------
+  // firebase config (your project)
   const firebaseConfig = {
     apiKey: "AIzaSyB4CcE_afYUrjwpp_DCaJwUuow478JRfP8",
     authDomain: "xn1oo-bb64d.firebaseapp.com",
@@ -174,252 +153,277 @@
   firebase.initializeApp(firebaseConfig);
   const database = firebase.database();
 
-  // ---------- Elements ----------
-  const canvas = document.getElementById("stars");
-  const ctx = canvas.getContext("2d");
-  const centerText = document.getElementById("centerText");
-  const playButton = document.getElementById("playButton");
-  const moon = document.getElementById("moon");
-  const typingArea = document.getElementById("typingArea");
-  const leaderboard = document.getElementById("leaderboard");
-  const lbList = document.getElementById("lbList");
-  const currentUserDiv = document.getElementById("currentUser");
-  const timerDiv = document.getElementById("timer");
-  const storeGUI = document.getElementById("storeGUI");
-  const storeHeader = document.getElementById("storeHeader");
+  // elements
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  const centerText = document.getElementById('centerText');
+  const playButton = document.getElementById('playButton');
+  const moon = document.getElementById('moon');
+  const typingArea = document.getElementById('typingArea');
+  const leaderboard = document.getElementById('leaderboard');
+  const lbList = document.getElementById('lbList');
+  const currentUserDiv = document.getElementById('currentUser');
+  const timerDiv = document.getElementById('timer');
+  const storeGUI = document.getElementById('storeGUI');
+  const storeHeader = document.getElementById('storeHeader');
 
-  // ---------- Responsiveness for canvas ----------
+  // canvas size
   function resizeCanvas(){
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
+    canvas.width = innerWidth; canvas.height = innerHeight;
   }
-  window.addEventListener("resize", resizeCanvas);
+  window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  // ---------- Starry background ----------
+  // stars
   const stars = [];
   for(let i=0;i<230;i++){
-    stars.push({
-      x: Math.random()*canvas.width,
-      y: Math.random()*canvas.height,
-      r: Math.random()*1.6 + 0.2,
-      vx: (Math.random()-0.5)*0.05,
-      vy: (Math.random()*0.2 + 0.02)
-    });
+    stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*1.6+0.2, vx:(Math.random()-0.5)*0.05, vy:(Math.random()*0.2 + 0.02)});
   }
   function drawStars(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = "white";
+    ctx.fillStyle = 'white';
     for(const s of stars){
-      ctx.beginPath();
-      ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
       s.x += s.vx; s.y += s.vy;
       if(s.y>canvas.height){ s.y=0; s.x = Math.random()*canvas.width; }
-      if(s.x<0) s.x = canvas.width;
-      if(s.x>canvas.width) s.x = 0;
+      if(s.x<0) s.x = canvas.width; if(s.x>canvas.width) s.x = 0;
     }
     requestAnimationFrame(drawStars);
   }
   drawStars();
 
-  // ---------- Local state & persistence ----------
-  let userName = localStorage.getItem("xn1ooName") || null;
-  let minutes = parseInt(localStorage.getItem("xn1ooTime") || "0", 10) || 0;
-  let userPrefs = JSON.parse(localStorage.getItem("xn1ooPrefs") || "{}") || {};
+  // state & persistence
+  let userName = localStorage.getItem('xn1ooName') || null;
+  let minutes = parseInt(localStorage.getItem('xn1ooTime')||'0',10) || 0;
+  let userPrefs = JSON.parse(localStorage.getItem('xn1ooPrefs') || '{}') || {};
 
-  // Apply current user info display
   function refreshUserUI(){
     currentUserDiv.textContent = "Your name: " + (userName || "(not set)");
     timerDiv.textContent = "Time: " + minutes + " min";
   }
   refreshUserUI();
 
-  // ---------- Typing utilities ----------
-  function sleep(ms){ return new Promise(res=>setTimeout(res,ms)); }
-
-  async function typeText(text, speed=70){
-    // inserts text into typingArea with a blinking cursor while typing
-    const cursor = document.createElement("span");
-    cursor.className = "typing-cursor";
+  // typing helper
+  const sleep = ms => new Promise(r=>setTimeout(r,ms));
+  async function typeText(text, speed=60){
+    const cursor = document.createElement('span'); cursor.className = 'typing-cursor';
     typingArea.appendChild(cursor);
     for(let i=0;i<text.length;i++){
-      cursor.insertAdjacentText("beforebegin", text[i]);
+      cursor.insertAdjacentText('beforebegin', text[i]);
       await sleep(speed);
     }
     cursor.remove();
   }
 
-  // ---------- Start flow when user clicks Play ----------
-  // show play after 2s
-  setTimeout(()=> playButton.classList.add("show"), 2000);
+  // show play after small delay
+  setTimeout(()=> playButton.classList.add('show'), 2000);
 
-  playButton.addEventListener("click", async ()=>{
-    // fade out play button
-    playButton.classList.remove("show");
-    playButton.style.display = "none";
+  // main flow: PLAY click -> welcome sequence -> reveal UI -> name prompt/greet -> start timer & firebase
+  playButton.addEventListener('click', async ()=>{
+    playButton.classList.remove('show');
+    playButton.style.display = 'none';
 
-    // slide center text up & shrink a bit
-    centerText.style.transform = "translateY(-120px) scale(.78)";
-    // show moon
-    moon.style.display = "block";
+    // run welcome sequence always
+    await typeText('Welcome,');
+    await sleep(800);
+    await typeText(' to my Website.');
+    typingArea.appendChild(document.createElement('br'));
+    await typeText('I Created this while I was sick at home,');
+    await sleep(800);
+    await typeText(' and also because I was bored.');
+    typingArea.appendChild(document.createElement('br'));
+    await typeText('But anyways just sit here and just do whatever');
+    typingArea.appendChild(document.createElement('br'));
+    await typeText("What's your name? (press ENTER when done)");
 
-    // run welcome typing if user not set; if is set greet
-    if(!userName){
-      await typeText("Welcome,");
-      await sleep(1000);
-      await typeText(" to my Website.");
-      typingArea.appendChild(document.createElement("br"));
-      await typeText("I Created this while I was sick at home,");
-      await sleep(1000);
-      await typeText(" and also because I was bored.");
-      typingArea.appendChild(document.createElement("br"));
-      await typeText("But anyways just sit here and just do whatever");
-      typingArea.appendChild(document.createElement("br"));
-      await typeText("What's your name? (press ENTER when done)");
-      // editable name input
-      const nameInput = document.createElement("span");
-      nameInput.contentEditable = "true";
-      nameInput.style.borderBottom = "1px dashed rgba(255,255,255,0.4)";
-      nameInput.style.marginLeft = "8px";
-      nameInput.style.padding = "2px 4px";
-      nameInput.style.outline = "none";
-      typingArea.appendChild(nameInput);
-      nameInput.focus();
+    // after welcome finishes — now slide center up & reveal moon + leaderboard
+    centerText.style.transform = 'translateY(-120px) scale(.78)';
+    moon.style.display = 'block';
+    leaderboard.style.display = 'block';
 
-      // handle enter
-      nameInput.addEventListener("keydown", (e)=>{
-        if(e.key === "Enter"){
-          e.preventDefault();
-          const val = nameInput.innerText.trim();
-          if(val){
-            userName = val;
-            localStorage.setItem("xn1ooName", userName);
-            typingArea.innerHTML = "";
-            greetAndProceed();
-          }
-        }
-      });
-    } else {
-      // user is stored locally -> greet and proceed
-      await greetAndProceed();
+    // if user exists -> greet, else insert editable input
+    if(userName){
+      await typeText('Hello, ' + userName, 80);
+      await sleep(900);
+      typingArea.innerHTML = '';
+      refreshUserUI();
+      startTimerAndSync();
+      attachFirebaseListeners();
+      // apply prefs after UI appears
+      if(userPrefs.color) applyColorToName(userPrefs.color);
+      if(userPrefs.effect) applyEffectToName(userPrefs.effect);
+      return;
     }
+
+    // else create contentEditable input for name
+    const nameSpan = document.createElement('span');
+    nameSpan.contentEditable = 'true';
+    nameSpan.style.borderBottom = '1px dashed rgba(255,255,255,0.4)';
+    nameSpan.style.marginLeft = '8px';
+    nameSpan.style.padding = '2px 4px';
+    nameSpan.style.outline = 'none';
+    typingArea.appendChild(nameSpan);
+    nameSpan.focus();
+
+    // handle Enter to submit name
+    nameSpan.addEventListener('keydown', async (e)=>{
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        const val = nameSpan.innerText.trim();
+        if(!val) return;
+        userName = val;
+        localStorage.setItem('xn1ooName', userName);
+        typingArea.innerHTML = '';
+        await typeText('Hello, ' + userName, 80);
+        await sleep(700);
+        typingArea.innerHTML = '';
+        refreshUserUI();
+        startTimerAndSync();
+        attachFirebaseListeners();
+      }
+    });
   });
 
-  async function greetAndProceed(){
-    await typeText("Hello, " + userName, 80);
-    await sleep(1000);
-    typingArea.innerHTML = "";
-    refreshUserUI();
-    // show leaderboard and start timer/fb sync
-    leaderboard.style.display = "block";
-    startTimer();    // starts interval that also updates firebase
-    attachFirebaseListeners();
-  }
-
-  // ---------- Timer: increments every minute and syncs ----------
+  // timer & firebase sync functions
   let timerStarted = false;
-  function startTimer(){
+  function startTimerAndSync(){
     if(timerStarted) return;
     timerStarted = true;
-    // immediate update to firebase for initial time
-    localStorage.setItem("xn1ooTime", minutes);
+    // ensure persisted minute stored immediately
+    localStorage.setItem('xn1ooTime', minutes);
     if(userName) writeUserToFirebase(userName, minutes, userPrefs);
-
+    // interval increments every minute
     setInterval(()=>{
       minutes++;
-      localStorage.setItem("xn1ooTime", minutes);
-      timerDiv.textContent = "Time: " + minutes + " min";
-      // update firebase
+      localStorage.setItem('xn1ooTime', minutes);
+      timerDiv.textContent = 'Time: ' + minutes + ' min';
       if(userName) writeUserToFirebase(userName, minutes, userPrefs);
-      // update leaderboard UI if visible
-      updateLocalLeaderDisplay();
+      // quick update highlight
+      highlightCurrentUserInLeaderboard();
     }, 60000);
   }
 
-  // ---------- Firebase writes & listeners ----------
+  // firebase helper: sanitize key
+  function safeKey(name){ return name.replace(/[.#$[\]/]/g,'_'); }
+
   function writeUserToFirebase(name, time, prefs){
     if(!name) return;
-    const safeName = name.replace(/\./g,'_'); // small safety for firebase keys
-    database.ref('users/' + safeName).set({
-      name: name,
-      time: time || 0,
-      prefs: prefs || {}
-    }).catch(err=>console.warn("FB write err",err));
+    const k = safeKey(name);
+    database.ref('users/' + k).set({ name: name, time: time||0, prefs: prefs||{} }).catch(()=>{/* ignore */});
   }
 
+  // attach firebase listeners for global leaderboard
   let fbAttached = false;
   function attachFirebaseListeners(){
     if(fbAttached) return;
     fbAttached = true;
-
-    const usersRef = database.ref('users');
-    usersRef.on('value', snapshot=>{
+    const refUsers = database.ref('users');
+    refUsers.on('value', snapshot=>{
       const data = snapshot.val() || {};
-      // convert to array and sort by time desc
-      const arr = Object.keys(data).map(k=>data[k]).sort((a,b)=> (b.time||0)-(a.time||0));
-      // render
-      lbList.innerHTML = "";
+      const arr = Object.keys(data).map(k=>data[k]).sort((a,b)=>(b.time||0)-(a.time||0));
+      lbList.innerHTML = '';
       arr.forEach((u,i)=>{
-        const el = document.createElement("div");
-        el.textContent = `${i+1}. ${u.name}: ${u.time || 0} min`;
-        if(userName && u.name === userName) el.classList.add("lb-current");
-        lbList.appendChild(el);
+        const row = document.createElement('div');
+        row.textContent = `${i+1}. ${u.name}: ${u.time||0} min`;
+        if(userName && u.name === userName) row.classList.add('lb-current');
+        lbList.appendChild(row);
       });
-      leaderboard.style.display = "block";
+      leaderboard.style.display = 'block';
     });
   }
 
-  function updateLocalLeaderDisplay(){
-    // when you run timer we update the highlighted entry in leaderboard if present
-    // attachFirebaseListeners already updates list on value changes; here we just update local highlight quickly
+  function highlightCurrentUserInLeaderboard(){
     const children = lbList.children;
     for(let i=0;i<children.length;i++){
-      children[i].classList.remove("lb-current");
-      if(userName && children[i].textContent.includes(userName)) children[i].classList.add("lb-current");
+      children[i].classList.remove('lb-current');
+      if(userName && children[i].textContent.includes(userName)) children[i].classList.add('lb-current');
     }
   }
 
-  // If user already existed on load, show UI immediately (no play click)
-  if(userName){
-    // make center smaller/up immediately so user sees moon/play not needed
-    centerText.style.transform = "translateY(-120px) scale(.78)";
-    moon.style.display = "block";
-    refreshUserUI();
-    leaderboard.style.display = "block";
-    startTimer();
-    attachFirebaseListeners();
+  // if user already had prefs saved, apply after UI revealed
+  function applyEffectToName(effect){
+    // reset
+    centerText.classList.remove('sparkles','flash','snow');
+    centerText.style.animation = '';
+    centerText.style.textShadow = '';
+    currentUserDiv.style.textShadow = '';
+    if(effect === 'sparkles'){
+      centerText.style.textShadow = `0 0 10px var(--glow), 0 0 30px var(--accent)`;
+      currentUserDiv.style.textShadow = `0 0 8px var(--accent)`;
+    } else if(effect === 'flash'){
+      addFlashKeyframes();
+      centerText.style.animation = 'flashAnim 1s linear infinite';
+    } else if(effect === 'snow'){
+      centerText.style.textShadow = `0 0 8px #fff, 0 0 12px rgba(200,220,255,0.6)`;
+    } else {
+      // none / reset
+      centerText.style.textShadow = '';
+      currentUserDiv.style.textShadow = '';
+    }
+    userPrefs.effect = effect;
+    localStorage.setItem('xn1ooPrefs', JSON.stringify(userPrefs));
+    if(userName) writeUserToFirebase(userName, minutes, userPrefs);
   }
 
-  // ---------- Moon toggles store GUI ----------
-  moon.addEventListener("click", ()=> {
-    storeGUI.classList.toggle("show");
-    storeGUI.setAttribute("aria-hidden", storeGUI.classList.contains("show") ? "false" : "true");
+  function addFlashKeyframes(){
+    if(document.getElementById('flashKeyframes')) return;
+    const s = document.createElement('style'); s.id='flashKeyframes';
+    s.textContent = '@keyframes flashAnim{0%{filter:brightness(1)}50%{filter:brightness(2)}100%{filter:brightness(1)}}';
+    document.head.appendChild(s);
+  }
+
+  function applyColorToName(color){
+    const map = { pink:'#ff7fcf', red:'#ff5a5a', blue:'#6fb7ff', orange:'#ffb16b', black:'#111' };
+    const c = map[color] || '#fff';
+    centerText.style.color = c;
+    centerText.style.textShadow = `0 0 8px ${c},0 0 20px ${c}`;
+    currentUserDiv.style.color = c;
+    userPrefs.color = color;
+    localStorage.setItem('xn1ooPrefs', JSON.stringify(userPrefs));
+    if(userName) writeUserToFirebase(userName, minutes, userPrefs);
+  }
+
+  // store item clicks
+  document.querySelectorAll('.storeItem').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      const type = item.dataset.type, val = item.dataset.value;
+      if(type === 'effect') applyEffectToName(val);
+      if(type === 'color') applyColorToName(val);
+      item.style.transform='scale(.98)';
+      setTimeout(()=>item.style.transform='',120);
+    });
   });
 
-  // ---------- Make store draggable by header ----------
+  // apply saved prefs (after page load; only visual — actual apply occurs after reveal)
+  if(userPrefs.color) applyColorToName(userPrefs.color);
+  if(userPrefs.effect) applyEffectToName(userPrefs.effect);
+
+  // moon toggles store
+  moon.addEventListener('click', ()=>{
+    storeGUI.classList.toggle('show');
+    storeGUI.setAttribute('aria-hidden', !storeGUI.classList.contains('show'));
+  });
+
+  // make store draggable by header
   (function makeDraggable(headerEl, containerEl){
     let dragging=false, offsetX=0, offsetY=0;
-    headerEl.addEventListener("mousedown", (e)=>{
+    headerEl.addEventListener('mousedown', (e)=>{
       dragging=true;
       offsetX = e.clientX - containerEl.offsetLeft;
       offsetY = e.clientY - containerEl.offsetTop;
-      containerEl.style.cursor = "grabbing";
+      containerEl.style.cursor = 'grabbing';
     });
-    document.addEventListener("mouseup", ()=>{ dragging=false; containerEl.style.cursor="grab"; });
-    document.addEventListener("mousemove", (e)=>{
+    document.addEventListener('mouseup', ()=>{ dragging=false; containerEl.style.cursor='grab'; });
+    document.addEventListener('mousemove', (e)=>{
       if(!dragging) return;
-      let x = e.clientX - offsetX;
-      let y = e.clientY - offsetY;
-      // clamp to viewport
+      let x = e.clientX - offsetX, y = e.clientY - offsetY;
       x = Math.max(4, Math.min(window.innerWidth - containerEl.offsetWidth - 4, x));
       y = Math.max(4, Math.min(window.innerHeight - containerEl.offsetHeight - 4, y));
-      containerEl.style.left = x + "px";
-      containerEl.style.top = y + "px";
+      containerEl.style.left = x + 'px'; containerEl.style.top = y + 'px';
     });
   })(storeHeader, storeGUI);
 
-  // ---------- Collapsible sections ----------
+  // collapsible sections
   document.querySelectorAll('.sectionTitle').forEach(title=>{
     title.addEventListener('click', ()=>{
       const content = title.nextElementSibling;
@@ -427,96 +431,13 @@
     });
   });
 
-  // ---------- Store item click behavior (applies effect/color to current user display) ----------
-  function applyEffectToName(effect){
-    // effect: "sparkles", "flash", "snow"
-    // implement simple CSS changes / animations per effect
-    // clear previous
-    centerText.classList.remove("sparkles","flash","snow");
-    currentUserDiv.classList.remove("sparkles","flash","snow");
-    if(effect === 'sparkles'){
-      // subtle sparkling via text-shadow animation
-      centerText.style.textShadow = "0 0 10px var(--glow), 0 0 30px var(--accent)";
-      currentUserDiv.style.textShadow = "0 0 8px var(--accent)";
-    } else if(effect === 'flash'){
-      centerText.style.animation = "flashAnim 1s linear infinite";
-      // define flash keyframes dynamically if not present
-      addFlashKeyframes();
-    } else if(effect === 'snow'){
-      centerText.style.textShadow = "0 0 8px #fff, 0 0 12px rgba(200,220,255,0.6)";
-    } else {
-      // reset
-      centerText.style.textShadow = "";
-      currentUserDiv.style.textShadow = "";
-      centerText.style.animation = "";
-    }
-    userPrefs.effect = effect;
-    localStorage.setItem("xn1ooPrefs", JSON.stringify(userPrefs));
-    if(userName) writeUserToFirebase(userName, minutes, userPrefs);
-  }
+  // if user was already set on page load, we don't auto-reveal UI — require PLAY click as requested
+  // BUT show small indicator (center stays center) so user clicks Play to start sequence
 
-  function addFlashKeyframes(){
-    if(document.getElementById("flashKeyframes")) return;
-    const s = document.createElement("style");
-    s.id = "flashKeyframes";
-    s.innerHTML = `@keyframes flashAnim{0%{filter:brightness(1)}50%{filter:brightness(2)}100%{filter:brightness(1)}}`;
-    document.head.appendChild(s);
-  }
+  // expose debug helpers
+  window.__xn1oo = { applyColorToName, applyEffectToName, writeUserToFirebase };
 
-  function applyColorToName(color){
-    // apply to centerText and currentUserDiv color
-    const mapping = {
-      pink:"#ff7fcf", red:"#ff5a5a", blue:"#6fb7ff", orange:"#ffb16b", black:"#111"
-    };
-    const c = mapping[color] || "#fff";
-    centerText.style.color = c;
-    centerText.style.textShadow = `0 0 8px ${c},0 0 20px ${c}`;
-    currentUserDiv.style.color = c;
-    userPrefs.color = color;
-    localStorage.setItem("xn1ooPrefs", JSON.stringify(userPrefs));
-    if(userName) writeUserToFirebase(userName, minutes, userPrefs);
-  }
-
-  document.querySelectorAll('.storeItem').forEach(item=>{
-    item.addEventListener('click', (e)=>{
-      const type = item.dataset.type;
-      const value = item.dataset.value;
-      if(type === "effect"){
-        applyEffectToName(value);
-      } else if(type === "color"){
-        applyColorToName(value);
-      }
-      // small visual feedback
-      item.style.transform = "scale(0.98)";
-      setTimeout(()=> item.style.transform = "", 120);
-    });
-  });
-
-  // apply saved prefs on load
-  if(userPrefs.effect) applyEffectToName(userPrefs.effect);
-  if(userPrefs.color) applyColorToName(userPrefs.color);
-
-  // ---------- small helper: sanitize firebase key (done in writeUserToFirebase) ----------
-
-  // ---------- Attach firebase listener if user is already present (on load) ----------
-  if(userName){
-    attachFirebaseListeners();
-    startTimer();
-  }
-
-  // ---------- allow pressing Enter in contentEditable on mobile by listening to blur too ----------
-  // (optional: save name if user types name and clicks away)
-  document.addEventListener('selectionchange', ()=>{ /* noop */ });
-
-  // ---------- Utility to update leaderboard quickly when local data changes ----------
-  function quickRefreshLeaderboard(){
-    // If firebase live listener exists, it will update automatically.
-    // Keep this function for potential local-only testing.
-  }
-
-  // expose some things for debugging (open console)
-  window.__xn1oo = { applyEffectToName, applyColorToName, writeUserToFirebase };
-
+  // small safety: if firebase errors due to rules, console will show it; that's okay
   </script>
 </body>
 </html>
