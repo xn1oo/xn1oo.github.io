@@ -197,6 +197,54 @@ position: absolute;
     </div>
   </div>
 </div>
+<style>
+/* your existing CSS here ... */
+
+/* Store sections (new) */
+.section {
+  margin: 10px 0;
+  border: 1px solid white;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.sectionHeader {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  color: white;
+  user-select: none;
+  text-shadow: 0 0 5px white;
+}
+
+.sectionHeader:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.sectionBody {
+  display: none;
+  padding: 8px;
+}
+
+.sectionBody button {
+  display: block;
+  width: 100%;
+  margin: 5px 0;
+  padding: 8px;
+  border: 1px solid white;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.sectionBody button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+</style>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -408,6 +456,48 @@ document.addEventListener("mousemove", (e) => {
     storeGUI.style.top = y + "px";
   }
 });
+
+// ===== STORE SECTIONS =====
+const perksHeader = document.getElementById("perksHeader");
+const perksBody = document.getElementById("perksBody");
+
+perksHeader.addEventListener("click", () => {
+  if(perksBody.style.display === "block") {
+    perksBody.style.display = "none";
+    perksHeader.textContent = "Perks ▼";
+  } else {
+    perksBody.style.display = "block";
+    perksHeader.textContent = "Perks ▲";
+  }
+});
+
+// ===== STORE ITEMS =====
+let timeMultiplier = parseInt(localStorage.getItem("xn1ooMultiplier") || "1");
+const doubleTimeBtn = document.getElementById("doubleTimeBtn");
+
+function updateStoreButtons() {
+  if(timeMultiplier >= 2) {
+    doubleTimeBtn.textContent = "2× Time (Owned)";
+    doubleTimeBtn.disabled = true;
+    doubleTimeBtn.style.opacity = 0.6;
+  }
+}
+updateStoreButtons();
+
+doubleTimeBtn.addEventListener("click", () => {
+  if(minutes >= 10 && timeMultiplier < 2) {
+    minutes -= 10;
+    timeMultiplier = 2;
+    localStorage.setItem("xn1ooTime", minutes);
+    localStorage.setItem("xn1ooMultiplier", timeMultiplier);
+    timer.textContent = "Time: " + minutes + " min";
+    updateStoreButtons();
+    alert("Purchased 2× Time! Your timer will now increase twice as fast.");
+  } else {
+    alert("Not enough minutes!");
+  }
+});
+
 
 // ===== INIT =====
 window.addEventListener("load", updateCurrentUserName);
