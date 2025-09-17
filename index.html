@@ -1,255 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>XN1OO</title>
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      background: linear-gradient(to bottom, #0d0d2b, #000000);
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      color: white;
-      font-family: "Courier New", monospace;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XN1OO</title>
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  background: linear-gradient(to bottom, #0d0d2b, #000000);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  color: white;
+  font-family: "Courier New", monospace;
+}
 
-    /* Starry background */
-    canvas#stars {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      pointer-events: none;
-    }
+/* Stars */
+canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events:none; }
 
-    /* Center glowing text */
-    #centerText {
-      font-size: 4rem;
-      color: white;
-      text-shadow: 0 0 20px white, 0 0 40px white;
-      animation: pulse 2s infinite alternate;
-      transition: all 1s ease-in-out;
-    }
+/* Center text */
+#centerText {
+  font-size: 4rem;
+  color: white;
+  text-shadow: 0 0 20px white,0 0 40px white;
+  animation: pulse 2s infinite alternate;
+  transition: all 1s ease-in-out;
+}
 
-    @keyframes pulse {
-      from { text-shadow: 0 0 10px white, 0 0 20px white; }
-      to { text-shadow: 0 0 20px white, 0 0 40px white; }
-    }
+@keyframes pulse {
+  from { text-shadow:0 0 10px white,0 0 20px white; }
+  to { text-shadow:0 0 20px white,0 0 40px white; }
+}
 
-    /* Play button */
-    #playButton {
-      position: absolute;
-      bottom: 20%;
-      opacity: 0;
-      visibility: hidden;
-      padding: 10px 20px;
-      width: 120px;
-      height: 40px;
-      border: none;
-      border-radius: 20px;
-      background: black;
-      color: white;
-      font-size: 1rem;
-      font-family: "Courier New", monospace;
-      text-shadow: 0 0 10px white, 0 0 20px white;
-      cursor: pointer;
-      animation: pulse 2s infinite alternate;
-      transition: opacity 0.8s ease, visibility 0.8s ease;
-    }
+/* Play button */
+#playButton {
+  position: absolute;
+  bottom: 20%;
+  opacity: 0;
+  visibility: hidden;
+  padding: 10px 20px;
+  width: 120px;
+  height: 40px;
+  border: none;
+  border-radius: 20px;
+  background: black;
+  color: white;
+  font-size: 1rem;
+  font-family: "Courier New", monospace;
+  text-shadow:0 0 10px white,0 0 20px white;
+  cursor: pointer;
+  animation: pulse 2s infinite alternate;
+  transition: opacity 0.8s ease, visibility 0.8s ease;
+}
 
-    #playButton.show {
-      opacity: 1;
-      visibility: visible;
-    }
+#playButton.show { opacity:1; visibility:visible; }
+.fadeOut { opacity:0 !important; visibility:hidden !important; transition:opacity 1s ease,visibility 1s ease; }
+.moveUp { transform: translateY(-150px) scale(0.7); }
 
-    .fadeOut {
-      opacity: 0 !important;
-      visibility: hidden !important;
-      transition: opacity 1s ease, visibility 1s ease;
-    }
+/* Moon */
+#moon {
+  position:absolute;
+  top:50px;
+  right:100px;
+  width:60px;
+  height:60px;
+  background:white;
+  border-radius:50%;
+  box-shadow:0 0 20px white,0 0 40px white;
+  opacity:0;
+  transition: opacity 2s ease;
+}
 
-    .moveUp {
-      transform: translateY(-150px) scale(0.7);
-    }
+/* Typing box */
+#typingBox {
+  margin-top:40px;
+  font-size:1.2rem;
+  white-space: pre-line;
+  text-shadow:0 0 10px white,0 0 20px white;
+}
 
-    /* Moon */
-    #moon {
-      position: absolute;
-      top: 50px;
-      right: 100px;
-      width: 60px;
-      height: 60px;
-      background: white;
-      border-radius: 50%;
-      box-shadow: 0 0 20px white, 0 0 40px white;
-      opacity: 0;
-      transition: opacity 2s ease;
-    }
+/* Cursor */
+.cursor {
+  display:inline-block;
+  width:10px;
+  background:white;
+  margin-left:2px;
+  animation: blink 1s infinite;
+}
+@keyframes blink { 50% { background: transparent; } }
 
-    /* Typing effect */
-    #typingBox {
-      margin-top: 40px;
-      font-size: 1.2rem;
-      white-space: pre-line;
-      text-shadow: 0 0 10px white, 0 0 20px white;
-    }
+/* Input for name */
+#nameInput {
+  font-family:"Courier New", monospace;
+  font-size:1.2rem;
+  padding:5px 8px;
+  border-radius:5px;
+  border:none;
+  outline:none;
+  margin-top:10px;
+  background:black;
+  color:white;
+  box-shadow:0 0 10px white;
+}
 
-    .cursor {
-      display: inline-block;
-      width: 10px;
-      background: white;
-      margin-left: 2px;
-      animation: blink 1s infinite;
-    }
-
-    @keyframes blink {
-      50% { background: transparent; }
-    }
-
-    /* Timer */
-    #timer {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      font-family: "Courier New", monospace;
-      font-size: 1rem;
-      color: white;
-      text-shadow: 0 0 10px white, 0 0 20px white;
-    }
-  </style>
+/* Leaderboard */
+#leaderboard {
+  position:absolute;
+  top:50px;
+  left:20px;
+  width:200px;
+  font-family:"Courier New", monospace;
+  font-size:1rem;
+  text-shadow:0 0 5px white,0 0 10px white;
+  display:none;
+}
+#timer {
+  position:absolute;
+  bottom:10px;
+  left:10px;
+  font-family:"Courier New", monospace;
+  font-size:1rem;
+  color:white;
+  text-shadow:0 0 10px white,0 0 20px white;
+}
+</style>
 </head>
 <body>
-  <canvas id="stars"></canvas>
+<canvas id="stars"></canvas>
 
-  <div id="centerText">X N 1 O O</div>
-  <button id="playButton">PLAY</button>
-  <div id="moon"></div>
-  <div id="typingBox"><span id="typedText"></span><span class="cursor"></span></div>
-  <div id="timer">Time: 0 min</div>
+<div id="centerText">X N 1 O O</div>
+<button id="playButton">PLAY</button>
+<div id="moon"></div>
+<div id="typingBox"><span id="typedText"></span><span class="cursor"></span></div>
+<div id="leaderboard"></div>
+<div id="timer">Time: 0 min</div>
 
-  <script>
-    // Star background
-    const canvas = document.getElementById('stars');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+<script>
+// STAR BACKGROUND
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+let stars=[];
+for(let i=0;i<200;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:Math.random()*2,speed:Math.random()*0.5});}
+function drawStars(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="white";stars.forEach(star=>{ctx.beginPath();ctx.arc(star.x,star.y,star.size,0,Math.PI*2);ctx.fill();star.y+=star.speed;if(star.y>canvas.height){star.y=0;star.x=Math.random()*canvas.width;}});requestAnimationFrame(drawStars);}
+drawStars();
 
-    let stars = [];
-    for (let i = 0; i < 200; i++) {
-      stars.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * 2,
-        speed: Math.random() * 0.5
+// PLAY BUTTON + CENTER TEXT + MOON
+const playButton = document.getElementById("playButton");
+const centerText = document.getElementById("centerText");
+const moon = document.getElementById("moon");
+const typedText = document.getElementById("typedText");
+const typingBox = document.getElementById("typingBox");
+const leaderboard = document.getElementById("leaderboard");
+
+setTimeout(()=>{playButton.classList.add("show");},2000);
+
+playButton.addEventListener("click",()=>{
+  playButton.classList.remove("show");
+  playButton.classList.add("fadeOut");
+  centerText.classList.add("moveUp");
+  setTimeout(()=>{moon.style.opacity=1;setTimeout(startNamePrompt,2000);},1200);
+});
+
+// TIMER
+let minutes=0;
+const timer=document.getElementById("timer");
+setInterval(()=>{minutes++;timer.textContent="Time: "+minutes+" min";},60000);
+
+// TYPING EFFECT (SLOWER)
+function typeLine(line, callback){
+  let i=0;
+  function typeChar(){
+    if(i<line.length){
+      typedText.textContent+=line.charAt(i);
+      i++;
+      setTimeout(typeChar,100); // slower typing
+    } else callback();
+  }
+  typeChar();
+}
+
+// ASK FOR NAME
+function startNamePrompt(){
+  typedText.textContent="What's your name? ";
+  const input=document.createElement("input");
+  input.id="nameInput";
+  typingBox.appendChild(input);
+  input.focus();
+  input.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter" && input.value.trim()!==""){
+      const name=input.value.trim();
+      typingBox.innerHTML="";
+      typeLine("Hello, "+name,()=>{
+        setTimeout(()=>{typingBox.style.display="none";showLeaderboard(name);},1000);
       });
+      saveUser(name);
     }
+  });
+}
 
-    function drawStars() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "white";
-      stars.forEach(star => {
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-        ctx.fill();
-        star.y += star.speed;
-        if (star.y > canvas.height) {
-          star.y = 0;
-          star.x = Math.random() * canvas.width;
-        }
-      });
-      requestAnimationFrame(drawStars);
-    }
-    drawStars();
+// LOCAL LEADERBOARD STORAGE
+function saveUser(name){
+  let users=JSON.parse(localStorage.getItem("xn1ooUsers")||"[]");
+  users.push({name:name,time:minutes});
+  localStorage.setItem("xn1ooUsers",JSON.stringify(users));
+}
 
-    // Show play button after 2s
-    const playButton = document.getElementById("playButton");
-    const centerText = document.getElementById("centerText");
-    const moon = document.getElementById("moon");
-    const typedText = document.getElementById("typedText");
-
-    setTimeout(() => {
-      playButton.classList.add("show");
-    }, 2000);
-
-    playButton.addEventListener("click", () => {
-      playButton.classList.remove("show");
-      playButton.classList.add("fadeOut");
-
-      centerText.classList.add("moveUp");
-
-      setTimeout(() => {
-        moon.style.opacity = 1;
-
-        // Start typing after moon fade
-        setTimeout(startTyping, 2000);
-      }, 1200);
-    });
-
-    // Typing effect
-    const messages = [
-      ["Welcome,", 1000, " to my Website."],
-      ["I Created this while I was sick at home,", 1000, " and also because I was bored."],
-      ["But anyways just sit here and just do whatever"]
-    ];
-
-    let msgIndex = 0;
-    let partIndex = 0;
-
-    function typeLine(line, callback) {
-      let i = 0;
-      function typeChar() {
-        if (i < line.length) {
-          typedText.textContent += line.charAt(i);
-          i++;
-          setTimeout(typeChar, 50);
-        } else {
-          callback();
-        }
-      }
-      typeChar();
-    }
-
-    function startTyping() {
-      if (msgIndex < messages.length) {
-        const parts = messages[msgIndex];
-        function typeNextPart() {
-          if (partIndex < parts.length) {
-            if (typeof parts[partIndex] === "string") {
-              typeLine(parts[partIndex], () => {
-                partIndex++;
-                typeNextPart();
-              });
-            } else if (typeof parts[partIndex] === "number") {
-              setTimeout(() => {
-                partIndex++;
-                typeNextPart();
-              }, parts[partIndex]);
-            }
-          } else {
-            msgIndex++;
-            partIndex = 0;
-            typedText.textContent += "\n"; // new line
-            startTyping();
-          }
-        }
-        typeNextPart();
-      }
-    }
-
-    // Timer
-    let minutes = 0;
-    const timer = document.getElementById("timer");
-    setInterval(() => {
-      minutes++;
-      timer.textContent = "Time: " + minutes + " min";
-    }, 60000);
-  </script>
+// SHOW LEADERBOARD
+function showLeaderboard(currentName){
+  leaderboard.style.display="block";
+  let users=JSON.parse(localStorage.getItem("xn1ooUsers")||"[]");
+  // sort descending by time
+  users.sort((a,b)=>b.time-a.time);
+  leaderboard.innerHTML="Leaderboard:\n";
+  users.forEach((u,i)=>{
+    leaderboard.innerHTML+=`${i+1}. ${u.name} - ${u.time} min\n`;
+  });
+}
+</script>
 </body>
 </html>
