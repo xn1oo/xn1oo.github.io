@@ -249,11 +249,14 @@ function saveUser(name){
 // SHOW LEADERBOARD
 function showLeaderboard(currentName){
   leaderboard.style.display="block";
-  let users=JSON.parse(localStorage.getItem("xn1ooUsers")||"[]");
-  users.sort((a,b)=>b.time-a.time);
-  leaderboard.innerHTML="Leaderboard:\n";
+  let users = JSON.parse(localStorage.getItem("xn1ooUsers") || "[]");
+  users.sort((a,b)=>b.time-a.time); // descending by time
+
+  leaderboard.innerHTML = "<strong>Leaderboard:</strong><br>";
   users.forEach((u,i)=>{
-    leaderboard.innerHTML+=`${i+1}. ${u.name} - ${u.time} min\n`;
+    const entry = document.createElement("div");
+    entry.textContent = `${i+1}. ${u.name}`;
+    leaderboard.appendChild(entry);
   });
 }
 </script>
