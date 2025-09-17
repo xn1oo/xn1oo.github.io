@@ -139,16 +139,16 @@ canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:
 
 /* Store GUI */
 #storeGUI {
-  position: absolute;
+ position: absolute;
   top: 100px;
   left: 100px;
   width: 300px;
   height: 200px;
-  background: rgba(0, 0, 0, 0.1); /* much more transparent */
-  backdrop-filter: blur(10px); /* frosted glass blur */
+  background: rgba(255, 255, 255, 0.05); /* almost fully transparent */
+  backdrop-filter: blur(15px); /* frosted glass blur */
   border: 2px solid white;
   border-radius: 10px;
-  box-shadow: 0 0 20px white, 0 0 40px white;
+  box-shadow: 0 0 20px white, 0 0 40px white; /* glow effect */
   display: none;
   cursor: grab;
 }
@@ -160,14 +160,14 @@ canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:
 }
 
 #storeHeader {
-  font-family: "Courier New", monospace;
+font-family: "Courier New", monospace;
   font-size: 1.2rem;
   text-align: center;
-  background: #111;
+  background: rgba(255, 255, 255, 0.05); /* keep header consistent */
   padding: 5px;
   border-bottom: 1px solid white;
   color: white;
-  text-shadow:0 0 10px white,0 0 20px white;
+  text-shadow: 0 0 10px white, 0 0 20px white;
   user-select: none;
   cursor: grab;
 }
