@@ -139,7 +139,7 @@ canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:
 
 /* Store GUI */
 #storeGUI {
-position: absolute;
+  position: absolute;
   top: 100px;
   left: 100px;
   width: 500px;   /* wider */
@@ -152,13 +152,10 @@ position: absolute;
   display: none;
   cursor: grab;
 }
-
-
 #storeGUI.show {
   display: block;
   animation: pulse 2s infinite alternate;
 }
-
 #storeHeader {
   font-family: "Courier New", monospace;
   font-size: 1.2rem;
@@ -197,9 +194,17 @@ position: absolute;
     </div>
   </div>
 </div>
-<style>
-/* your existing CSS here ... */
 
+<!-- CHAT SYSTEM -->
+<div id="chatContainer">
+  <div id="chatHeader">Chat ▲</div>
+  <div id="chatBody">
+    <div id="chatMessages"></div>
+    <input id="chatInput" type="text" placeholder="Type a message...">
+  </div>
+</div>
+
+<style>
 /* Store sections (new) */
 .section {
   margin: 10px 0;
@@ -207,7 +212,6 @@ position: absolute;
   border-radius: 5px;
   overflow: hidden;
 }
-
 .sectionHeader {
   background: rgba(255, 255, 255, 0.1);
   padding: 8px;
@@ -217,16 +221,13 @@ position: absolute;
   user-select: none;
   text-shadow: 0 0 5px white;
 }
-
 .sectionHeader:hover {
   background: rgba(255, 255, 255, 0.2);
 }
-
 .sectionBody {
   display: none;
   padding: 8px;
 }
-
 .sectionBody button {
   display: block;
   width: 100%;
@@ -240,9 +241,53 @@ position: absolute;
   cursor: pointer;
   transition: background 0.3s;
 }
-
 .sectionBody button:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+/* CHAT SYSTEM */
+#chatContainer {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 250px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid white;
+  border-radius: 8px;
+  font-family: "Courier New", monospace;
+  color: white;
+  box-shadow: 0 0 10px white;
+}
+#chatHeader {
+  padding: 5px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.1);
+  text-align: center;
+  font-weight: bold;
+  user-select: none;
+}
+#chatBody {
+  display: none;
+  flex-direction: column;
+  height: 200px;
+}
+#chatMessages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 5px;
+  font-size: 0.9rem;
+  max-height: 150px;
+}
+#chatInput {
+  width: 90%;
+  margin: 5px auto;
+  padding: 5px;
+  border: none;
+  border-radius: 5px;
+  background: black;
+  color: white;
+  outline: none;
+  font-family: "Courier New", monospace;
 }
 </style>
 
@@ -265,239 +310,45 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// ===== STAR BACKGROUND =====
-const canvas = document.getElementById('stars');
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-let stars=[];
-for(let i=0;i<200;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:Math.random()*2,speed:Math.random()*0.5});}
-function drawStars(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="white";stars.forEach(star=>{ctx.beginPath();ctx.arc(star.x,star.y,star.size,0,Math.PI*2);ctx.fill();star.y+=star.speed;if(star.y>canvas.height){star.y=0;star.x=Math.random()*canvas.width;}});requestAnimationFrame(drawStars);}
-drawStars();
+/* ... your existing JavaScript (stars, leaderboard, store, etc.) ... */
 
-// ===== ELEMENTS =====
-const playButton = document.getElementById("playButton");
-const centerText = document.getElementById("centerText");
-const moon = document.getElementById("moon");
-const typedText = document.getElementById("typedText");
-const typingBox = document.getElementById("typingBox");
-const leaderboard = document.getElementById("leaderboard");
-const currentUserDiv = document.getElementById("currentUser");
-const storeGUI = document.getElementById("storeGUI");
-const storeHeader = document.getElementById("storeHeader");
+// ===== CHAT SYSTEM =====
+const chatHeader = document.getElementById("chatHeader");
+const chatBody = document.getElementById("chatBody");
+const chatMessages = document.getElementById("chatMessages");
+const chatInput = document.getElementById("chatInput");
 
-// ===== TIMER =====
-let minutes = parseInt(localStorage.getItem("xn1ooTime") || "0");
-const timer = document.getElementById("timer");
-timer.textContent = "Time: " + minutes + " min";
+let chatOpen = false;
 
-setInterval(()=>{
-  minutes++;
-  timer.textContent = "Time: "+minutes+" min";
-  localStorage.setItem("xn1ooTime", minutes);
-  const storedName = localStorage.getItem("xn1ooName");
-  if(storedName){
-    database.ref('users/'+storedName).set({name:storedName,time:minutes});
+chatHeader.addEventListener("click", () => {
+  chatOpen = !chatOpen;
+  if(chatOpen){
+    chatBody.style.display = "flex";
+    chatHeader.textContent = "Chat ▼";
+  } else {
+    chatBody.style.display = "none";
+    chatHeader.textContent = "Chat ▲";
   }
-},60000);
-
-// ===== PLAY BUTTON =====
-setTimeout(()=>{playButton.classList.add("show");},2000);
-playButton.addEventListener("click",()=>{
-  playButton.classList.remove("show");
-  playButton.classList.add("fadeOut");
-  centerText.classList.add("moveUp");
-  setTimeout(()=>{
-    moon.style.opacity=1;
-    setTimeout(runCodeTyping,2000);
-  },1200);
 });
 
-// ===== SLOW TYPING FUNCTION =====
-function typeLine(line, callback, speed=100){
-  let i=0;
-  function typeChar(){
-    if(i<line.length){
-      typedText.textContent+=line.charAt(i);
-      i++;
-      setTimeout(typeChar,speed);
-    } else callback();
-  }
-  typeChar();
-}
+database.ref("chat").on("child_added", (snapshot) => {
+  const msg = snapshot.val();
+  const div = document.createElement("div");
+  div.textContent = msg.name + ": " + msg.text;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+});
 
-// ===== TYPING MESSAGES =====
-const messages = [
-  ["Welcome,",1000," to my Website."],
-  ["I Created this while I was sick at home,",1000," and also because I was bored."],
-  ["But anyways just sit here and just do whatever"]
-];
-
-let msgIndex=0;
-let partIndex=0;
-
-function runCodeTyping(){
-  if(msgIndex<messages.length){
-    const parts = messages[msgIndex];
-    function typeNextPart(){
-      if(partIndex<parts.length){
-        if(typeof parts[partIndex]==="string"){
-          typeLine(parts[partIndex],()=>{partIndex++;typeNextPart();},100);
-        } else if(typeof parts[partIndex]==="number"){
-          setTimeout(()=>{partIndex++;typeNextPart();},parts[partIndex]);
-        }
-      } else {
-        msgIndex++;
-        partIndex=0;
-        typedText.textContent+="\n";
-        runCodeTyping();
-      }
-    }
-    typeNextPart();
-  } else {
-    checkName();
-  }
-}
-
-// ===== CURRENT USER DISPLAY =====
-function updateCurrentUserName() {
-  const storedName = localStorage.getItem("xn1ooName");
-  if(storedName){
-    currentUserDiv.textContent = "Your name: " + storedName;
-  }
-}
-
-// ===== CHECK NAME =====
-function checkName(){
-  const storedName = localStorage.getItem("xn1ooName");
-  if(storedName){
-    typedText.textContent="";
-    updateCurrentUserName();
-    typeLine("Hello, "+storedName,()=>{
-      setTimeout(()=>{typedText.style.display="none"; showGlobalLeaderboard();},1000);
-    },100);
-  } else {
-    startNamePrompt();
-  }
-}
-
-// ===== ASK FOR NAME =====
-function startNamePrompt(){
-  typedText.textContent="What's your name? ";
-  const input = document.createElement("input");
-  input.id="nameInput";
-  typingBox.appendChild(input);
-  input.focus();
-  input.addEventListener("keydown",(e)=>{
-    if(e.key==="Enter" && input.value.trim()!==""){
-      const name=input.value.trim();
-      localStorage.setItem("xn1ooName", name);
-      updateCurrentUserName();
-      typingBox.innerHTML="";
-      typeLine("Hello, "+name,()=>{
-        setTimeout(()=>{typedText.style.display="none"; showGlobalLeaderboard();},1000);
-      },100);
-      database.ref('users/'+name).set({name:name,time:minutes});
-    }
-  });
-}
-
-// ===== GLOBAL LEADERBOARD =====
-function showGlobalLeaderboard(){
-  leaderboard.style.display="block";  
-  const storedName = localStorage.getItem("xn1ooName");
-  database.ref('users').on('value', (snapshot)=>{
-    const data = snapshot.val();
-    if(!data) return;
-    const sortedUsers = Object.values(data).sort((a,b)=>b.time - a.time);
-    leaderboard.innerHTML = "<strong>Leaderboard:</strong><br>";
-    sortedUsers.forEach((u,i)=>{
-      const entry = document.createElement("div");
-      entry.textContent = `${i+1}. ${u.name}: ${u.time} min`;
-      if(u.name === storedName){
-        entry.style.color = "#00ffff";
-        entry.style.textShadow = "0 0 5px #00ffff,0 0 10px #00ffff";
-        entry.style.fontWeight = "bold";
-      }
-      leaderboard.appendChild(entry);
+chatInput.addEventListener("keydown", (e) => {
+  if(e.key === "Enter" && chatInput.value.trim() !== ""){
+    const storedName = localStorage.getItem("xn1ooName") || "Guest";
+    database.ref("chat").push({
+      name: storedName,
+      text: chatInput.value.trim()
     });
-  });
-}
-
-// ===== MOON CLICK TO TOGGLE STORE =====
-moon.addEventListener("click", () => {
-  storeGUI.classList.toggle("show");
-});
-
-// ===== DRAG STORE GUI =====
-let isDragging = false;
-let offsetX = 0;
-let offsetY = 0;
-
-storeHeader.addEventListener("mousedown", (e) => {
-  isDragging = true;
-  offsetX = e.clientX - storeGUI.offsetLeft;
-  offsetY = e.clientY - storeGUI.offsetTop;
-  storeGUI.style.cursor = "grabbing";
-});
-
-document.addEventListener("mouseup", () => {
-  isDragging = false;
-  storeGUI.style.cursor = "grab";
-});
-
-document.addEventListener("mousemove", (e) => {
-  if(isDragging){
-    let x = e.clientX - offsetX;
-    let y = e.clientY - offsetY;
-    x = Math.max(0, Math.min(window.innerWidth - storeGUI.offsetWidth, x));
-    y = Math.max(0, Math.min(window.innerHeight - storeGUI.offsetHeight, y));
-    storeGUI.style.left = x + "px";
-    storeGUI.style.top = y + "px";
+    chatInput.value = "";
   }
 });
-
-// ===== STORE SECTIONS =====
-const perksHeader = document.getElementById("perksHeader");
-const perksBody = document.getElementById("perksBody");
-
-perksHeader.addEventListener("click", () => {
-  if(perksBody.style.display === "block") {
-    perksBody.style.display = "none";
-    perksHeader.textContent = "Perks ▼";
-  } else {
-    perksBody.style.display = "block";
-    perksHeader.textContent = "Perks ▲";
-  }
-});
-
-// ===== STORE ITEMS =====
-let timeMultiplier = parseInt(localStorage.getItem("xn1ooMultiplier") || "1");
-const doubleTimeBtn = document.getElementById("doubleTimeBtn");
-
-function updateStoreButtons() {
-  if(timeMultiplier >= 2) {
-    doubleTimeBtn.textContent = "2× Time (Owned)";
-    doubleTimeBtn.disabled = true;
-    doubleTimeBtn.style.opacity = 0.6;
-  }
-}
-updateStoreButtons();
-
-doubleTimeBtn.addEventListener("click", () => {
-  if(minutes >= 10 && timeMultiplier < 2) {
-    minutes -= 10;
-    timeMultiplier = 2;
-    localStorage.setItem("xn1ooTime", minutes);
-    localStorage.setItem("xn1ooMultiplier", timeMultiplier);
-    timer.textContent = "Time: " + minutes + " min";
-    updateStoreButtons();
-    alert("Purchased 2× Time! Your timer will now increase twice as fast.");
-  } else {
-    alert("Not enough minutes!");
-  }
-});
-
 
 // ===== INIT =====
 window.addEventListener("load", updateCurrentUserName);
