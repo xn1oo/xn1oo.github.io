@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>XN1OO</title>
+  <title>X N 1 O O</title>
   <style>
     body {
       margin: 0;
@@ -92,21 +92,7 @@
       border-radius: 50%;
       box-shadow: 0 0 20px white, 0 0 40px white;
       opacity: 0;
-      transition: opacity 1.5s ease;
-    }
-
-    /* Bench */
-    #bench {
-      position: absolute;
-      bottom: 50px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-family: monospace;
-      font-size: 1.5rem;
-      color: gray;
-      text-shadow: 0 0 10px white, 0 0 20px white;
-      opacity: 0;
-      transition: opacity 1.5s ease;
+      transition: opacity 2s ease; /* smooth fade-in */
     }
 
     /* Timer */
@@ -127,7 +113,6 @@
   <div id="centerText">X N 1 O O</div>
   <button id="playButton">PLAY</button>
   <div id="moon"></div>
-  <div id="bench">🪑</div>
   <div id="timer">Time: 0 min</div>
 
   <script>
@@ -168,7 +153,6 @@
     const playButton = document.getElementById("playButton");
     const centerText = document.getElementById("centerText");
     const moon = document.getElementById("moon");
-    const bench = document.getElementById("bench");
 
     setTimeout(() => {
       playButton.classList.add("show");
@@ -182,10 +166,9 @@
       // Move text up
       centerText.classList.add("moveUp");
 
-      // Show moon and bench after delay
+      // Show moon after delay
       setTimeout(() => {
         moon.style.opacity = 1;
-        bench.style.opacity = 1;
       }, 1200);
     });
 
