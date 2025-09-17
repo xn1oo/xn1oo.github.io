@@ -10,15 +10,19 @@
       overflow: hidden;
       background: black;
       color: white;
-      font-family: Arial, sans-serif;
+      font-family: 'Courier New', monospace; /* pixel/retro feel */
     }
+
     canvas {
       position: absolute;
-      top: 0; left: 0;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       display: block;
     }
+
+    /* Center Neon Text */
     .center-text {
       position: absolute;
       top: 50%;
@@ -29,46 +33,105 @@
       color: white;
       text-align: center;
       z-index: 1;
-
-      /* Neon white glow effect */
       text-shadow: 
         0 0 5px #ffffff,
         0 0 10px #ffffff,
         0 0 20px #ffffff,
         0 0 40px #ffffff,
         0 0 80px #ffffff;
-
-      /* Pulse animation */
       animation: pulse 2.5s infinite alternate;
+      transition: all 2s ease;
     }
 
     @keyframes pulse {
       0% {
-        text-shadow: 
-          0 0 5px #ffffff,
-          0 0 10px #ffffff,
-          0 0 20px #ffffff,
-          0 0 40px #ffffff,
-          0 0 80px #ffffff;
+        text-shadow: 0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff;
         transform: translate(-50%, -50%) scale(1);
       }
       100% {
-        text-shadow: 
-          0 0 10px #ffffff,
-          0 0 20px #ffffff,
-          0 0 40px #ffffff,
-          0 0 80px #ffffff,
-          0 0 120px #ffffff;
+        text-shadow: 0 0 15px #ffffff, 0 0 30px #ffffff, 0 0 60px #ffffff;
         transform: translate(-50%, -50%) scale(1.1);
       }
+    }
+
+    /* Play Button */
+    .play-button {
+      position: absolute;
+      top: 70%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      height: 23px;
+      border-radius: 12px;
+      border: 2px solid white;
+      background: black;
+      color: white;
+      font-size: 1rem;
+      font-family: 'Trebuchet MS', sans-serif;
+      text-align: center;
+      line-height: 23px;
+      cursor: pointer;
+      text-shadow: 0 0 5px #fff, 0 0 15px #fff;
+      box-shadow: 0 0 10px #fff, 0 0 30px #fff;
+      opacity: 0;
+      z-index: 2;
+      animation: pulseButton 2s infinite alternate;
+      transition: opacity 1s ease, transform 1s ease;
+    }
+
+    @keyframes pulseButton {
+      0% { box-shadow: 0 0 10px #fff; }
+      100% { box-shadow: 0 0 25px #fff, 0 0 50px #fff; }
+    }
+
+    .fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Moon */
+    .moon {
+      position: absolute;
+      top: 40px;
+      right: 60px;
+      width: 100px;
+      display: none;
+      z-index: 1;
+    }
+
+    /* Bench */
+    .bench {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      display: none;
+      z-index: 1;
+    }
+
+    /* Timer */
+    .timer {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      font-size: 1rem;
+      color: white;
+      text-shadow: 0 0 5px #fff, 0 0 15px #fff;
+      display: none;
     }
   </style>
 </head>
 <body>
   <canvas id="stars"></canvas>
-  <div class="center-text">X N 1 O O</div>
+  <div class="center-text" id="centerText">X N 1 O O</div>
+  <div class="play-button" id="playButton">PLAY</div>
+  <img src="moon.png" alt="Moon" class="moon" id="moon">
+  <img src="bench.png" alt="Bench" class="bench" id="bench">
+  <div class="timer" id="timer">Time: 0 minutes</div>
 
   <script>
+    // Starry Background
     const canvas = document.getElementById("stars");
     const ctx = canvas.getContext("2d");
 
@@ -98,10 +161,8 @@
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
         ctx.fill();
-
         star.x += star.dx;
         star.y += star.dy;
-
         if (star.x < 0) star.x = canvas.width;
         if (star.x > canvas.width) star.x = 0;
         if (star.y < 0) star.y = canvas.height;
@@ -110,6 +171,40 @@
       requestAnimationFrame(animate);
     }
     animate();
+
+    // Play Button logic
+    const playButton = document.getElementById("playButton");
+    const centerText = document.getElementById("centerText");
+    const moon = document.getElementById("moon");
+    const bench = document.getElementById("bench");
+    const timer = document.getElementById("timer");
+
+    // Show play button after 2s
+    setTimeout(() => {
+      playButton.style.opacity = 1;
+    }, 2000);
+
+    playButton.addEventListener("click", () => {
+      // Fade out play button
+      playButton.classList.add("fade-out");
+
+      // Move center text up + shrink
+      centerText.style.transform = "translate(-50%, -200%) scale(0.7)";
+
+      // Show moon & bench after animation
+      setTimeout(() => {
+        moon.style.display = "block";
+        bench.style.display = "block";
+        timer.style.display = "block";
+      }, 1500);
+
+      // Timer logic
+      let minutes = 0;
+      setInterval(() => {
+        minutes++;
+        timer.textContent = `Time: ${minutes} minutes`;
+      }, 60000);
+    });
   </script>
 </body>
 </html>
