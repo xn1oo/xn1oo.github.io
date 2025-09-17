@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>X N 1 O O</title>
+<title>XN1OO</title>
 <style>
 body {
   margin: 0;
@@ -70,6 +70,7 @@ canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:
   box-shadow:0 0 20px white,0 0 40px white;
   opacity:0;
   transition: opacity 2s ease;
+  cursor:pointer;
 }
 
 /* Typing box */
@@ -113,6 +114,19 @@ canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:
   text-shadow:0 0 5px white,0 0 10px white;
   display:none;
 }
+
+/* Current user display */
+#currentUser {
+  position: absolute;
+  bottom: 30px;
+  left: 10px;
+  font-family: "Courier New", monospace;
+  font-size: 1rem;
+  color: white;
+  text-shadow: 0 0 10px white, 0 0 20px white;
+}
+
+/* Timer */
 #timer {
   position:absolute;
   bottom:10px;
@@ -121,6 +135,39 @@ canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:
   font-size:1rem;
   color:white;
   text-shadow:0 0 10px white,0 0 20px white;
+}
+
+/* Store GUI */
+#storeGUI {
+  position: absolute;
+  top: 100px;
+  left: 100px;
+  width: 300px;
+  height: 200px;
+  background: black;
+  border: 2px solid white;
+  border-radius: 10px;
+  box-shadow: 0 0 20px white, 0 0 40px white;
+  display: none;
+  cursor: grab;
+}
+
+#storeGUI.show {
+  display: block;
+  animation: pulse 2s infinite alternate;
+}
+
+#storeHeader {
+  font-family: "Courier New", monospace;
+  font-size: 1.2rem;
+  text-align: center;
+  background: #111;
+  padding: 5px;
+  border-bottom: 1px solid white;
+  color: white;
+  text-shadow:0 0 10px white,0 0 20px white;
+  user-select: none;
+  cursor: grab;
 }
 </style>
 </head>
@@ -132,7 +179,14 @@ canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:
 <div id="moon"></div>
 <div id="typingBox"><span id="typedText"></span><span class="cursor"></span></div>
 <div id="leaderboard"></div>
+<div id="currentUser">Your name: </div>
 <div id="timer">Time: 0 min</div>
+
+<!-- Store GUI -->
+<div id="storeGUI">
+  <div id="storeHeader">Store</div>
+  <!-- Store content here -->
+</div>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -147,7 +201,8 @@ const firebaseConfig = {
   projectId: "xn1oo-bb64d",
   storageBucket: "xn1oo-bb64d.firebasestorage.app",
   messagingSenderId: "767448528500",
-  appId: "1:767448528500:web:6a39c8c16abb037643c321"
+  appId: "1:767448528500:web:6a39c8c16abb037643c321",
+  measurementId: "G-TMZ3FH9WL0"
 };
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
@@ -169,19 +224,19 @@ const moon = document.getElementById("moon");
 const typedText = document.getElementById("typedText");
 const typingBox = document.getElementById("typingBox");
 const leaderboard = document.getElementById("leaderboard");
+const currentUserDiv = document.getElementById("currentUser");
+const storeGUI = document.getElementById("storeGUI");
+const storeHeader = document.getElementById("storeHeader");
 
 // ===== TIMER =====
 let minutes = parseInt(localStorage.getItem("xn1ooTime") || "0");
 const timer = document.getElementById("timer");
 timer.textContent = "Time: " + minutes + " min";
 
-// Update timer every minute
 setInterval(()=>{
   minutes++;
   timer.textContent = "Time: "+minutes+" min";
   localStorage.setItem("xn1ooTime", minutes);
-
-  // Update Firebase
   const storedName = localStorage.getItem("xn1ooName");
   if(storedName){
     database.ref('users/'+storedName).set({name:storedName,time:minutes});
@@ -213,7 +268,7 @@ function typeLine(line, callback, speed=100){
   typeChar();
 }
 
-// ===== ORIGINAL CODE-TYPING MESSAGES =====
+// ===== TYPING MESSAGES =====
 const messages = [
   ["Welcome,",1000," to my Website."],
   ["I Created this while I was sick at home,",1000," and also because I was bored."],
@@ -242,15 +297,24 @@ function runCodeTyping(){
     }
     typeNextPart();
   } else {
-    checkName(); // after messages, check if name exists
+    checkName();
   }
 }
 
-// ===== CHECK IF USER ALREADY EXISTS =====
+// ===== CURRENT USER DISPLAY =====
+function updateCurrentUserName() {
+  const storedName = localStorage.getItem("xn1ooName");
+  if(storedName){
+    currentUserDiv.textContent = "Your name: " + storedName;
+  }
+}
+
+// ===== CHECK NAME =====
 function checkName(){
   const storedName = localStorage.getItem("xn1ooName");
   if(storedName){
     typedText.textContent="";
+    updateCurrentUserName();
     typeLine("Hello, "+storedName,()=>{
       setTimeout(()=>{typedText.style.display="none"; showGlobalLeaderboard();},1000);
     },100);
@@ -270,6 +334,7 @@ function startNamePrompt(){
     if(e.key==="Enter" && input.value.trim()!==""){
       const name=input.value.trim();
       localStorage.setItem("xn1ooName", name);
+      updateCurrentUserName();
       typingBox.innerHTML="";
       typeLine("Hello, "+name,()=>{
         setTimeout(()=>{typedText.style.display="none"; showGlobalLeaderboard();},1000);
@@ -281,8 +346,8 @@ function startNamePrompt(){
 
 // ===== GLOBAL LEADERBOARD =====
 function showGlobalLeaderboard(){
-  leaderboard.style.display="block";
-  
+  leaderboard.style.display="block";  
+  const storedName = localStorage.getItem("xn1ooName");
   database.ref('users').on('value', (snapshot)=>{
     const data = snapshot.val();
     if(!data) return;
@@ -291,10 +356,51 @@ function showGlobalLeaderboard(){
     sortedUsers.forEach((u,i)=>{
       const entry = document.createElement("div");
       entry.textContent = `${i+1}. ${u.name}: ${u.time} min`;
+      if(u.name === storedName){
+        entry.style.color = "#00ffff";
+        entry.style.textShadow = "0 0 5px #00ffff,0 0 10px #00ffff";
+        entry.style.fontWeight = "bold";
+      }
       leaderboard.appendChild(entry);
     });
   });
 }
+
+// ===== MOON CLICK TO TOGGLE STORE =====
+moon.addEventListener("click", () => {
+  storeGUI.classList.toggle("show");
+});
+
+// ===== DRAG STORE GUI =====
+let isDragging = false;
+let offsetX = 0;
+let offsetY = 0;
+
+storeHeader.addEventListener("mousedown", (e) => {
+  isDragging = true;
+  offsetX = e.clientX - storeGUI.offsetLeft;
+  offsetY = e.clientY - storeGUI.offsetTop;
+  storeGUI.style.cursor = "grabbing";
+});
+
+document.addEventListener("mouseup", () => {
+  isDragging = false;
+  storeGUI.style.cursor = "grab";
+});
+
+document.addEventListener("mousemove", (e) => {
+  if(isDragging){
+    let x = e.clientX - offsetX;
+    let y = e.clientY - offsetY;
+    x = Math.max(0, Math.min(window.innerWidth - storeGUI.offsetWidth, x));
+    y = Math.max(0, Math.min(window.innerHeight - storeGUI.offsetHeight, y));
+    storeGUI.style.left = x + "px";
+    storeGUI.style.top = y + "px";
+  }
+});
+
+// ===== INIT =====
+window.addEventListener("load", updateCurrentUserName);
 </script>
 </body>
 </html>
