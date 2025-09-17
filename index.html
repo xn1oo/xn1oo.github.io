@@ -1,443 +1,408 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>X N 1 O O</title>
 <style>
-  :root{
-    --glow: #ffffff;
-    --accent: #00ffff;
-    --store-bg: rgba(255,255,255,0.03);
-  }
-  html,body{height:100%;margin:0;font-family:"Courier New",monospace;background:linear-gradient(180deg,#071028,#000);color:#fff;overflow:hidden}
+body {
+  margin: 0;
+  height: 100vh;
+  background: linear-gradient(to bottom, #0d0d2b, #000000);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  color: white;
+  font-family: "Courier New", monospace;
+}
 
-  /* canvas stars */
-  #stars{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+/* Stars */
+canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events:none; }
 
-  /* center text */
-  .center-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;pointer-events:none}
-  #centerText{
-    pointer-events:none;
-    font-size:4rem;
-    letter-spacing:1rem;
-    color:var(--glow);
-    text-align:center;
-    text-shadow:0 0 8px var(--glow),0 0 20px var(--glow),0 0 40px var(--glow);
-    transition:transform 1s ease, top 1s ease;
-    will-change:transform;
-    user-select:none;
-  }
-  .glow-pulse{animation:glowPulse 2.5s infinite alternate}
-  @keyframes glowPulse{
-    from{text-shadow:0 0 8px var(--glow),0 0 20px var(--glow)}
-    to{text-shadow:0 0 16px var(--glow),0 0 40px var(--glow)}
-  }
+/* Center text */
+#centerText {
+  font-size: 4rem;
+  color: white;
+  text-shadow: 0 0 20px white,0 0 40px white;
+  animation: pulse 2s infinite alternate;
+  transition: all 1s ease-in-out;
+}
+@keyframes pulse {
+  from { text-shadow:0 0 10px white,0 0 20px white; }
+  to { text-shadow:0 0 20px white,0 0 40px white; }
+}
 
-  /* play button */
-  #playButton{
-    position:fixed; z-index:6; left:50%; transform:translateX(-50%); bottom:18vh;
-    width:120px;height:32px;border-radius:16px;background:rgba(0,0,0,0.6); border:2px solid rgba(255,255,255,0.9);
-    color:white; font-weight:700; cursor:pointer; box-shadow:0 0 10px rgba(255,255,255,0.08);
-    display:none; align-items:center; justify-content:center;
-  }
-  #playButton.show{display:flex; animation:btnPulse 2s infinite alternate}
-  @keyframes btnPulse{from{box-shadow:0 0 8px rgba(255,255,255,0.12)} to{box-shadow:0 0 20px rgba(255,255,255,0.24)}}
-  #playButton:active{transform:translateX(-50%) scale(.98)}
+/* Play button */
+#playButton {
+  position: absolute;
+  bottom: 20%;
+  opacity: 0;
+  visibility: hidden;
+  padding: 10px 20px;
+  width: 120px;
+  height: 40px;
+  border: none;
+  border-radius: 20px;
+  background: black;
+  color: white;
+  font-size: 1rem;
+  font-family: "Courier New", monospace;
+  text-shadow:0 0 10px white,0 0 20px white;
+  cursor: pointer;
+  animation: pulse 2s infinite alternate;
+  transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+#playButton.show { opacity:1; visibility:visible; }
+.fadeOut { opacity:0 !important; visibility:hidden !important; transition:opacity 1s ease,visibility 1s ease; }
+.moveUp { transform: translateY(-150px) scale(0.7); }
 
-  /* moon */
-  #moon{
-    position:fixed; z-index:6; top:48px; right:80px; width:72px; height:72px; border-radius:50%;
-    background: radial-gradient(circle at 35% 30%, #fff 0%, #dcdcdc 20%, #bbb 60%, transparent 61%), transparent;
-    box-shadow:0 0 18px rgba(255,255,255,0.18), 0 0 40px rgba(255,255,255,0.08);
-    display:none; cursor:pointer;
-  }
+/* Moon */
+#moon {
+  position:absolute;
+  top:50px;
+  right:100px;
+  width:60px;
+  height:60px;
+  background:white;
+  border-radius:50%;
+  box-shadow:0 0 20px white,0 0 40px white;
+  opacity:0;
+  transition: opacity 2s ease;
+  cursor:pointer;
+}
 
-  /* typing area */
-  #typingArea{
-    position:fixed; z-index:6; bottom:28vh; left:50%; transform:translateX(-50%); width:80%; max-width:900px;
-    color:white; font-size:1.05rem; text-align:center; white-space:pre-wrap; pointer-events:auto; text-shadow:0 0 6px var(--glow);
-  }
-  .typing-cursor{display:inline-block;width:10px;height:1.2rem;background:var(--glow);vertical-align:middle;margin-left:6px;animation:blink 1s steps(1) infinite}
-  @keyframes blink{50%{opacity:0}}
+/* Typing box */
+#typingBox {
+  margin-top:40px;
+  font-size:1.2rem;
+  white-space: pre-line;
+  text-shadow:0 0 10px white,0 0 20px white;
+}
+.cursor {
+  display:inline-block;
+  width:10px;
+  background:white;
+  margin-left:2px;
+  animation: blink 1s infinite;
+}
+@keyframes blink { 50% { background: transparent; } }
 
-  /* leaderboard */
-  #leaderboard{position:fixed; z-index:6; top:20px; left:20px; width:230px; font-size:0.95rem; text-shadow:0 0 6px var(--glow); display:none;
-    background: rgba(0,0,0,0.15); padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.06);}
-  #leaderboard strong{display:block;margin-bottom:8px}
-  .lb-current{color:var(--accent); text-shadow:0 0 8px var(--accent); font-weight:700}
+/* Input for name */
+#nameInput {
+  font-family:"Courier New", monospace;
+  font-size:1.2rem;
+  padding:5px 8px;
+  border-radius:5px;
+  border:none;
+  outline:none;
+  margin-top:10px;
+  background:black;
+  color:white;
+  box-shadow:0 0 10px white;
+}
 
-  /* user & timer */
-  #currentUser{position:fixed; left:14px; bottom:52px; z-index:6; font-size:0.95rem; text-shadow:0 0 6px var(--glow)}
-  #timer{position:fixed; left:14px; bottom:26px; z-index:6; font-size:0.95rem; text-shadow:0 0 6px var(--glow)}
+/* Leaderboard */
+#leaderboard {
+  position:absolute;
+  top:50px;
+  left:20px;
+  width:220px;
+  font-family:"Courier New", monospace;
+  font-size:1rem;
+  text-shadow:0 0 5px white,0 0 10px white;
+  display:none;
+}
 
-  /* store GUI */
-  #storeGUI{
-    position:fixed; z-index:10; top:110px; left:100px; width:520px; min-height:120px;
-    background: rgba(255,255,255,0.03); backdrop-filter: blur(14px); border-radius:12px; padding:10px;
-    border:1px solid rgba(255,255,255,0.08); box-shadow:0 6px 30px rgba(0,0,0,0.6), 0 0 20px rgba(255,255,255,0.04);
-    display:none; cursor:grab; overflow:hidden;
-  }
-  #storeGUI.show{display:block; animation:glowPulse 2s infinite alternate}
-  #storeHeader{font-size:1.05rem; text-align:center; padding:6px 0; user-select:none; cursor:grab; text-shadow:0 0 8px var(--glow)}
+/* Current user display */
+#currentUser {
+  position: absolute;
+  bottom: 30px;
+  left: 10px;
+  font-family: "Courier New", monospace;
+  font-size: 1rem;
+  color: white;
+  text-shadow: 0 0 10px white, 0 0 20px white;
+}
 
-  .section{margin:8px 4px; border-radius:6px; border:1px solid rgba(255,255,255,0.04); overflow:hidden}
-  .sectionTitle{padding:8px; background: rgba(255,255,255,0.02); cursor:pointer; user-select:none; text-shadow:0 0 6px var(--glow)}
-  .sectionContent{max-height:0; overflow:hidden; transition:max-height .42s ease; padding-left:8px}
-  .sectionContent.open{max-height:400px}
-  .storeItem{padding:6px 8px; cursor:pointer; transition:all .14s; user-select:none}
-  .storeItem:hover{color:var(--accent); text-shadow:0 0 8px var(--accent)}
+/* Timer */
+#timer {
+  position:absolute;
+  bottom:10px;
+  left:10px;
+  font-family:"Courier New", monospace;
+  font-size:1rem;
+  color:white;
+  text-shadow:0 0 10px white,0 0 20px white;
+}
 
-  @media (max-width:640px){
-    #storeGUI{left:12px; right:12px; width:auto}
-    #leaderboard{left:8px; width:160px}
-    #centerText{font-size:2.4rem; letter-spacing:.6rem}
-  }
+/* Store GUI */
+#storeGUI {
+position: absolute;
+  top: 100px;
+  left: 100px;
+  width: 500px;   /* wider */
+  height: 350px;  /* taller */
+  background: rgba(255, 255, 255, 0.05); /* very transparent */
+  backdrop-filter: blur(15px); /* frosted glass blur */
+  border: 2px solid white;
+  border-radius: 10px;
+  box-shadow: 0 0 20px white, 0 0 40px white; /* glow effect */
+  display: none;
+  cursor: grab;
+}
+
+
+#storeGUI.show {
+  display: block;
+  animation: pulse 2s infinite alternate;
+}
+
+#storeHeader {
+  font-family: "Courier New", monospace;
+  font-size: 1.2rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 5px;
+  border-bottom: 1px solid white;
+  color: white;
+  text-shadow: 0 0 10px white, 0 0 20px white;
+  user-select: none;
+  cursor: grab;
+}
 </style>
 </head>
 <body>
-  <canvas id="stars"></canvas>
+<canvas id="stars"></canvas>
 
-  <div class="center-wrap"><div id="centerText" class="glow-pulse">X N 1 O O</div></div>
-  <button id="playButton" class="glow-pulse">PLAY</button>
-  <div id="moon" title="Open Store"></div>
+<div id="centerText">X N 1 O O</div>
+<button id="playButton">PLAY</button>
+<div id="moon"></div>
+<div id="typingBox"><span id="typedText"></span><span class="cursor"></span></div>
+<div id="leaderboard"></div>
+<div id="currentUser">Your name: </div>
+<div id="timer">Time: 0 min</div>
 
-  <div id="typingArea"></div>
+<!-- Store GUI -->
+<div id="storeGUI">
+  <div id="storeHeader">Store</div>
+  <!-- Store content here -->
+</div>
 
-  <div id="leaderboard"><strong class="glow-pulse">Leaderboard</strong><div id="lbList"></div></div>
-  <div id="currentUser" class="glow-pulse">Your name: (not set)</div>
-  <div id="timer" class="glow-pulse">Time: 0 min</div>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <div id="storeGUI" aria-hidden="true">
-    <div id="storeHeader" class="glow-pulse">Store</div>
+<script>
+// ===== FIREBASE CONFIG =====
+const firebaseConfig = {
+  apiKey: "AIzaSyB4CcE_afYUrjwpp_DCaJwUuow478JRfP8",
+  authDomain: "xn1oo-bb64d.firebaseapp.com",
+  databaseURL: "https://xn1oo-bb64d-default-rtdb.firebaseio.com",
+  projectId: "xn1oo-bb64d",
+  storageBucket: "xn1oo-bb64d.firebasestorage.app",
+  messagingSenderId: "767448528500",
+  appId: "1:767448528500:web:6a39c8c16abb037643c321",
+  measurementId: "G-TMZ3FH9WL0"
+};
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
-    <div class="section">
-      <div class="sectionTitle">Name Effects</div>
-      <div class="sectionContent">
-        <div class="storeItem" data-type="effect" data-value="sparkles">Sparkles</div>
-        <div class="storeItem" data-type="effect" data-value="flash">Flash</div>
-        <div class="storeItem" data-type="effect" data-value="snow">Snow</div>
-      </div>
-    </div>
+// ===== STAR BACKGROUND =====
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+let stars=[];
+for(let i=0;i<200;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:Math.random()*2,speed:Math.random()*0.5});}
+function drawStars(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="white";stars.forEach(star=>{ctx.beginPath();ctx.arc(star.x,star.y,star.size,0,Math.PI*2);ctx.fill();star.y+=star.speed;if(star.y>canvas.height){star.y=0;star.x=Math.random()*canvas.width;}});requestAnimationFrame(drawStars);}
+drawStars();
 
-    <div class="section">
-      <div class="sectionTitle">Name Colors</div>
-      <div class="sectionContent">
-        <div class="storeItem" data-type="color" data-value="pink">Pink</div>
-        <div class="storeItem" data-type="color" data-value="red">Red</div>
-        <div class="storeItem" data-type="color" data-value="blue">Blue</div>
-        <div class="storeItem" data-type="color" data-value="orange">Orange</div>
-        <div class="storeItem" data-type="color" data-value="black">Black</div>
-      </div>
-    </div>
-  </div>
+// ===== ELEMENTS =====
+const playButton = document.getElementById("playButton");
+const centerText = document.getElementById("centerText");
+const moon = document.getElementById("moon");
+const typedText = document.getElementById("typedText");
+const typingBox = document.getElementById("typingBox");
+const leaderboard = document.getElementById("leaderboard");
+const currentUserDiv = document.getElementById("currentUser");
+const storeGUI = document.getElementById("storeGUI");
+const storeHeader = document.getElementById("storeHeader");
 
-  <!-- Firebase compat -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+// ===== TIMER =====
+let minutes = parseInt(localStorage.getItem("xn1ooTime") || "0");
+const timer = document.getElementById("timer");
+timer.textContent = "Time: " + minutes + " min";
 
-  <script>
-  /* ===== stable app script ===== */
-
-  // firebase config (your project)
-  const firebaseConfig = {
-    apiKey: "AIzaSyB4CcE_afYUrjwpp_DCaJwUuow478JRfP8",
-    authDomain: "xn1oo-bb64d.firebaseapp.com",
-    databaseURL: "https://xn1oo-bb64d-default-rtdb.firebaseio.com",
-    projectId: "xn1oo-bb64d",
-    storageBucket: "xn1oo-bb64d.firebasestorage.app",
-    messagingSenderId: "767448528500",
-    appId: "1:767448528500:web:6a39c8c16abb037643c321",
-    measurementId: "G-TMZ3FH9WL0"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const database = firebase.database();
-
-  // elements
-  const canvas = document.getElementById('stars');
-  const ctx = canvas.getContext('2d');
-  const centerText = document.getElementById('centerText');
-  const playButton = document.getElementById('playButton');
-  const moon = document.getElementById('moon');
-  const typingArea = document.getElementById('typingArea');
-  const leaderboard = document.getElementById('leaderboard');
-  const lbList = document.getElementById('lbList');
-  const currentUserDiv = document.getElementById('currentUser');
-  const timerDiv = document.getElementById('timer');
-  const storeGUI = document.getElementById('storeGUI');
-  const storeHeader = document.getElementById('storeHeader');
-
-  // canvas size
-  function resizeCanvas(){
-    canvas.width = innerWidth; canvas.height = innerHeight;
+setInterval(()=>{
+  minutes++;
+  timer.textContent = "Time: "+minutes+" min";
+  localStorage.setItem("xn1ooTime", minutes);
+  const storedName = localStorage.getItem("xn1ooName");
+  if(storedName){
+    database.ref('users/'+storedName).set({name:storedName,time:minutes});
   }
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
+},60000);
 
-  // stars
-  const stars = [];
-  for(let i=0;i<230;i++){
-    stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*1.6+0.2, vx:(Math.random()-0.5)*0.05, vy:(Math.random()*0.2 + 0.02)});
+// ===== PLAY BUTTON =====
+setTimeout(()=>{playButton.classList.add("show");},2000);
+playButton.addEventListener("click",()=>{
+  playButton.classList.remove("show");
+  playButton.classList.add("fadeOut");
+  centerText.classList.add("moveUp");
+  setTimeout(()=>{
+    moon.style.opacity=1;
+    setTimeout(runCodeTyping,2000);
+  },1200);
+});
+
+// ===== SLOW TYPING FUNCTION =====
+function typeLine(line, callback, speed=100){
+  let i=0;
+  function typeChar(){
+    if(i<line.length){
+      typedText.textContent+=line.charAt(i);
+      i++;
+      setTimeout(typeChar,speed);
+    } else callback();
   }
-  function drawStars(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = 'white';
-    for(const s of stars){
-      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
-      s.x += s.vx; s.y += s.vy;
-      if(s.y>canvas.height){ s.y=0; s.x = Math.random()*canvas.width; }
-      if(s.x<0) s.x = canvas.width; if(s.x>canvas.width) s.x = 0;
-    }
-    requestAnimationFrame(drawStars);
-  }
-  drawStars();
+  typeChar();
+}
 
-  // state & persistence
-  let userName = localStorage.getItem('xn1ooName') || null;
-  let minutes = parseInt(localStorage.getItem('xn1ooTime')||'0',10) || 0;
-  let userPrefs = JSON.parse(localStorage.getItem('xn1ooPrefs') || '{}') || {};
+// ===== TYPING MESSAGES =====
+const messages = [
+  ["Welcome,",1000," to my Website."],
+  ["I Created this while I was sick at home,",1000," and also because I was bored."],
+  ["But anyways just sit here and just do whatever"]
+];
 
-  function refreshUserUI(){
-    currentUserDiv.textContent = "Your name: " + (userName || "(not set)");
-    timerDiv.textContent = "Time: " + minutes + " min";
-  }
-  refreshUserUI();
+let msgIndex=0;
+let partIndex=0;
 
-  // typing helper
-  const sleep = ms => new Promise(r=>setTimeout(r,ms));
-  async function typeText(text, speed=60){
-    const cursor = document.createElement('span'); cursor.className = 'typing-cursor';
-    typingArea.appendChild(cursor);
-    for(let i=0;i<text.length;i++){
-      cursor.insertAdjacentText('beforebegin', text[i]);
-      await sleep(speed);
-    }
-    cursor.remove();
-  }
-
-  // show play after small delay
-  setTimeout(()=> playButton.classList.add('show'), 2000);
-
-  // main flow: PLAY click -> welcome sequence -> reveal UI -> name prompt/greet -> start timer & firebase
-  playButton.addEventListener('click', async ()=>{
-    playButton.classList.remove('show');
-    playButton.style.display = 'none';
-
-    // run welcome sequence always
-    await typeText('Welcome,');
-    await sleep(800);
-    await typeText(' to my Website.');
-    typingArea.appendChild(document.createElement('br'));
-    await typeText('I Created this while I was sick at home,');
-    await sleep(800);
-    await typeText(' and also because I was bored.');
-    typingArea.appendChild(document.createElement('br'));
-    await typeText('But anyways just sit here and just do whatever');
-    typingArea.appendChild(document.createElement('br'));
-    await typeText("What's your name? (press ENTER when done)");
-
-    // after welcome finishes — now slide center up & reveal moon + leaderboard
-    centerText.style.transform = 'translateY(-120px) scale(.78)';
-    moon.style.display = 'block';
-    leaderboard.style.display = 'block';
-
-    // if user exists -> greet, else insert editable input
-    if(userName){
-      await typeText('Hello, ' + userName, 80);
-      await sleep(900);
-      typingArea.innerHTML = '';
-      refreshUserUI();
-      startTimerAndSync();
-      attachFirebaseListeners();
-      // apply prefs after UI appears
-      if(userPrefs.color) applyColorToName(userPrefs.color);
-      if(userPrefs.effect) applyEffectToName(userPrefs.effect);
-      return;
-    }
-
-    // else create contentEditable input for name
-    const nameSpan = document.createElement('span');
-    nameSpan.contentEditable = 'true';
-    nameSpan.style.borderBottom = '1px dashed rgba(255,255,255,0.4)';
-    nameSpan.style.marginLeft = '8px';
-    nameSpan.style.padding = '2px 4px';
-    nameSpan.style.outline = 'none';
-    typingArea.appendChild(nameSpan);
-    nameSpan.focus();
-
-    // handle Enter to submit name
-    nameSpan.addEventListener('keydown', async (e)=>{
-      if(e.key === 'Enter'){
-        e.preventDefault();
-        const val = nameSpan.innerText.trim();
-        if(!val) return;
-        userName = val;
-        localStorage.setItem('xn1ooName', userName);
-        typingArea.innerHTML = '';
-        await typeText('Hello, ' + userName, 80);
-        await sleep(700);
-        typingArea.innerHTML = '';
-        refreshUserUI();
-        startTimerAndSync();
-        attachFirebaseListeners();
+function runCodeTyping(){
+  if(msgIndex<messages.length){
+    const parts = messages[msgIndex];
+    function typeNextPart(){
+      if(partIndex<parts.length){
+        if(typeof parts[partIndex]==="string"){
+          typeLine(parts[partIndex],()=>{partIndex++;typeNextPart();},100);
+        } else if(typeof parts[partIndex]==="number"){
+          setTimeout(()=>{partIndex++;typeNextPart();},parts[partIndex]);
+        }
+      } else {
+        msgIndex++;
+        partIndex=0;
+        typedText.textContent+="\n";
+        runCodeTyping();
       }
-    });
-  });
-
-  // timer & firebase sync functions
-  let timerStarted = false;
-  function startTimerAndSync(){
-    if(timerStarted) return;
-    timerStarted = true;
-    // ensure persisted minute stored immediately
-    localStorage.setItem('xn1ooTime', minutes);
-    if(userName) writeUserToFirebase(userName, minutes, userPrefs);
-    // interval increments every minute
-    setInterval(()=>{
-      minutes++;
-      localStorage.setItem('xn1ooTime', minutes);
-      timerDiv.textContent = 'Time: ' + minutes + ' min';
-      if(userName) writeUserToFirebase(userName, minutes, userPrefs);
-      // quick update highlight
-      highlightCurrentUserInLeaderboard();
-    }, 60000);
-  }
-
-  // firebase helper: sanitize key
-  function safeKey(name){ return name.replace(/[.#$[\]/]/g,'_'); }
-
-  function writeUserToFirebase(name, time, prefs){
-    if(!name) return;
-    const k = safeKey(name);
-    database.ref('users/' + k).set({ name: name, time: time||0, prefs: prefs||{} }).catch(()=>{/* ignore */});
-  }
-
-  // attach firebase listeners for global leaderboard
-  let fbAttached = false;
-  function attachFirebaseListeners(){
-    if(fbAttached) return;
-    fbAttached = true;
-    const refUsers = database.ref('users');
-    refUsers.on('value', snapshot=>{
-      const data = snapshot.val() || {};
-      const arr = Object.keys(data).map(k=>data[k]).sort((a,b)=>(b.time||0)-(a.time||0));
-      lbList.innerHTML = '';
-      arr.forEach((u,i)=>{
-        const row = document.createElement('div');
-        row.textContent = `${i+1}. ${u.name}: ${u.time||0} min`;
-        if(userName && u.name === userName) row.classList.add('lb-current');
-        lbList.appendChild(row);
-      });
-      leaderboard.style.display = 'block';
-    });
-  }
-
-  function highlightCurrentUserInLeaderboard(){
-    const children = lbList.children;
-    for(let i=0;i<children.length;i++){
-      children[i].classList.remove('lb-current');
-      if(userName && children[i].textContent.includes(userName)) children[i].classList.add('lb-current');
     }
+    typeNextPart();
+  } else {
+    checkName();
   }
+}
 
-  // if user already had prefs saved, apply after UI revealed
-  function applyEffectToName(effect){
-    // reset
-    centerText.classList.remove('sparkles','flash','snow');
-    centerText.style.animation = '';
-    centerText.style.textShadow = '';
-    currentUserDiv.style.textShadow = '';
-    if(effect === 'sparkles'){
-      centerText.style.textShadow = `0 0 10px var(--glow), 0 0 30px var(--accent)`;
-      currentUserDiv.style.textShadow = `0 0 8px var(--accent)`;
-    } else if(effect === 'flash'){
-      addFlashKeyframes();
-      centerText.style.animation = 'flashAnim 1s linear infinite';
-    } else if(effect === 'snow'){
-      centerText.style.textShadow = `0 0 8px #fff, 0 0 12px rgba(200,220,255,0.6)`;
-    } else {
-      // none / reset
-      centerText.style.textShadow = '';
-      currentUserDiv.style.textShadow = '';
+// ===== CURRENT USER DISPLAY =====
+function updateCurrentUserName() {
+  const storedName = localStorage.getItem("xn1ooName");
+  if(storedName){
+    currentUserDiv.textContent = "Your name: " + storedName;
+  }
+}
+
+// ===== CHECK NAME =====
+function checkName(){
+  const storedName = localStorage.getItem("xn1ooName");
+  if(storedName){
+    typedText.textContent="";
+    updateCurrentUserName();
+    typeLine("Hello, "+storedName,()=>{
+      setTimeout(()=>{typedText.style.display="none"; showGlobalLeaderboard();},1000);
+    },100);
+  } else {
+    startNamePrompt();
+  }
+}
+
+// ===== ASK FOR NAME =====
+function startNamePrompt(){
+  typedText.textContent="What's your name? ";
+  const input = document.createElement("input");
+  input.id="nameInput";
+  typingBox.appendChild(input);
+  input.focus();
+  input.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter" && input.value.trim()!==""){
+      const name=input.value.trim();
+      localStorage.setItem("xn1ooName", name);
+      updateCurrentUserName();
+      typingBox.innerHTML="";
+      typeLine("Hello, "+name,()=>{
+        setTimeout(()=>{typedText.style.display="none"; showGlobalLeaderboard();},1000);
+      },100);
+      database.ref('users/'+name).set({name:name,time:minutes});
     }
-    userPrefs.effect = effect;
-    localStorage.setItem('xn1ooPrefs', JSON.stringify(userPrefs));
-    if(userName) writeUserToFirebase(userName, minutes, userPrefs);
-  }
+  });
+}
 
-  function addFlashKeyframes(){
-    if(document.getElementById('flashKeyframes')) return;
-    const s = document.createElement('style'); s.id='flashKeyframes';
-    s.textContent = '@keyframes flashAnim{0%{filter:brightness(1)}50%{filter:brightness(2)}100%{filter:brightness(1)}}';
-    document.head.appendChild(s);
-  }
-
-  function applyColorToName(color){
-    const map = { pink:'#ff7fcf', red:'#ff5a5a', blue:'#6fb7ff', orange:'#ffb16b', black:'#111' };
-    const c = map[color] || '#fff';
-    centerText.style.color = c;
-    centerText.style.textShadow = `0 0 8px ${c},0 0 20px ${c}`;
-    currentUserDiv.style.color = c;
-    userPrefs.color = color;
-    localStorage.setItem('xn1ooPrefs', JSON.stringify(userPrefs));
-    if(userName) writeUserToFirebase(userName, minutes, userPrefs);
-  }
-
-  // store item clicks
-  document.querySelectorAll('.storeItem').forEach(item=>{
-    item.addEventListener('click', ()=>{
-      const type = item.dataset.type, val = item.dataset.value;
-      if(type === 'effect') applyEffectToName(val);
-      if(type === 'color') applyColorToName(val);
-      item.style.transform='scale(.98)';
-      setTimeout(()=>item.style.transform='',120);
+// ===== GLOBAL LEADERBOARD =====
+function showGlobalLeaderboard(){
+  leaderboard.style.display="block";  
+  const storedName = localStorage.getItem("xn1ooName");
+  database.ref('users').on('value', (snapshot)=>{
+    const data = snapshot.val();
+    if(!data) return;
+    const sortedUsers = Object.values(data).sort((a,b)=>b.time - a.time);
+    leaderboard.innerHTML = "<strong>Leaderboard:</strong><br>";
+    sortedUsers.forEach((u,i)=>{
+      const entry = document.createElement("div");
+      entry.textContent = `${i+1}. ${u.name}: ${u.time} min`;
+      if(u.name === storedName){
+        entry.style.color = "#00ffff";
+        entry.style.textShadow = "0 0 5px #00ffff,0 0 10px #00ffff";
+        entry.style.fontWeight = "bold";
+      }
+      leaderboard.appendChild(entry);
     });
   });
+}
 
-  // apply saved prefs (after page load; only visual — actual apply occurs after reveal)
-  if(userPrefs.color) applyColorToName(userPrefs.color);
-  if(userPrefs.effect) applyEffectToName(userPrefs.effect);
+// ===== MOON CLICK TO TOGGLE STORE =====
+moon.addEventListener("click", () => {
+  storeGUI.classList.toggle("show");
+});
 
-  // moon toggles store
-  moon.addEventListener('click', ()=>{
-    storeGUI.classList.toggle('show');
-    storeGUI.setAttribute('aria-hidden', !storeGUI.classList.contains('show'));
-  });
+// ===== DRAG STORE GUI =====
+let isDragging = false;
+let offsetX = 0;
+let offsetY = 0;
 
-  // make store draggable by header
-  (function makeDraggable(headerEl, containerEl){
-    let dragging=false, offsetX=0, offsetY=0;
-    headerEl.addEventListener('mousedown', (e)=>{
-      dragging=true;
-      offsetX = e.clientX - containerEl.offsetLeft;
-      offsetY = e.clientY - containerEl.offsetTop;
-      containerEl.style.cursor = 'grabbing';
-    });
-    document.addEventListener('mouseup', ()=>{ dragging=false; containerEl.style.cursor='grab'; });
-    document.addEventListener('mousemove', (e)=>{
-      if(!dragging) return;
-      let x = e.clientX - offsetX, y = e.clientY - offsetY;
-      x = Math.max(4, Math.min(window.innerWidth - containerEl.offsetWidth - 4, x));
-      y = Math.max(4, Math.min(window.innerHeight - containerEl.offsetHeight - 4, y));
-      containerEl.style.left = x + 'px'; containerEl.style.top = y + 'px';
-    });
-  })(storeHeader, storeGUI);
+storeHeader.addEventListener("mousedown", (e) => {
+  isDragging = true;
+  offsetX = e.clientX - storeGUI.offsetLeft;
+  offsetY = e.clientY - storeGUI.offsetTop;
+  storeGUI.style.cursor = "grabbing";
+});
 
-  // collapsible sections
-  document.querySelectorAll('.sectionTitle').forEach(title=>{
-    title.addEventListener('click', ()=>{
-      const content = title.nextElementSibling;
-      content.classList.toggle('open');
-    });
-  });
+document.addEventListener("mouseup", () => {
+  isDragging = false;
+  storeGUI.style.cursor = "grab";
+});
 
-  // if user was already set on page load, we don't auto-reveal UI — require PLAY click as requested
-  // BUT show small indicator (center stays center) so user clicks Play to start sequence
+document.addEventListener("mousemove", (e) => {
+  if(isDragging){
+    let x = e.clientX - offsetX;
+    let y = e.clientY - offsetY;
+    x = Math.max(0, Math.min(window.innerWidth - storeGUI.offsetWidth, x));
+    y = Math.max(0, Math.min(window.innerHeight - storeGUI.offsetHeight, y));
+    storeGUI.style.left = x + "px";
+    storeGUI.style.top = y + "px";
+  }
+});
 
-  // expose debug helpers
-  window.__xn1oo = { applyColorToName, applyEffectToName, writeUserToFirebase };
-
-  // small safety: if firebase errors due to rules, console will show it; that's okay
-  </script>
+// ===== INIT =====
+window.addEventListener("load", updateCurrentUserName);
+</script>
 </body>
 </html>
