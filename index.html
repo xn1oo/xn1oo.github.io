@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>X N 1 O O</title>
+  <title>XN1OO</title>
   <style>
     body {
       margin: 0;
       height: 100vh;
-      background: black;
+      background: linear-gradient(to bottom, #0d0d2b, #000000); /* gradient background */
       overflow: hidden;
       display: flex;
       justify-content: center;
@@ -26,6 +26,7 @@
       width: 100%;
       height: 100%;
       z-index: -1;
+      pointer-events: none;
     }
 
     /* Center glowing text */
@@ -92,7 +93,7 @@
       border-radius: 50%;
       box-shadow: 0 0 20px white, 0 0 40px white;
       opacity: 0;
-      transition: opacity 2s ease; /* smooth fade-in */
+      transition: opacity 2s ease;
     }
 
     /* Timer */
@@ -159,14 +160,11 @@
     }, 2000);
 
     playButton.addEventListener("click", () => {
-      // Fade out play button
       playButton.classList.remove("show");
       playButton.classList.add("fadeOut");
 
-      // Move text up
       centerText.classList.add("moveUp");
 
-      // Show moon after delay
       setTimeout(() => {
         moon.style.opacity = 1;
       }, 1200);
