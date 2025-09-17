@@ -29,6 +29,38 @@
       color: white;
       text-align: center;
       z-index: 1;
+
+      /* Neon white glow effect */
+      text-shadow: 
+        0 0 5px #ffffff,
+        0 0 10px #ffffff,
+        0 0 20px #ffffff,
+        0 0 40px #ffffff,
+        0 0 80px #ffffff;
+
+      /* Pulse animation */
+      animation: pulse 2.5s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% {
+        text-shadow: 
+          0 0 5px #ffffff,
+          0 0 10px #ffffff,
+          0 0 20px #ffffff,
+          0 0 40px #ffffff,
+          0 0 80px #ffffff;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      100% {
+        text-shadow: 
+          0 0 10px #ffffff,
+          0 0 20px #ffffff,
+          0 0 40px #ffffff,
+          0 0 80px #ffffff,
+          0 0 120px #ffffff;
+        transform: translate(-50%, -50%) scale(1.1);
+      }
     }
   </style>
 </head>
@@ -40,7 +72,6 @@
     const canvas = document.getElementById("stars");
     const ctx = canvas.getContext("2d");
 
-    // Resize canvas to fill screen
     function resizeCanvas() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -48,7 +79,6 @@
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
 
-    // Create starfield
     const stars = [];
     const numStars = 200;
     for (let i = 0; i < numStars; i++) {
@@ -61,7 +91,6 @@
       });
     }
 
-    // Animation loop
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "white";
@@ -73,7 +102,6 @@
         star.x += star.dx;
         star.y += star.dy;
 
-        // wrap around edges
         if (star.x < 0) star.x = canvas.width;
         if (star.x > canvas.width) star.x = 0;
         if (star.y < 0) star.y = canvas.height;
@@ -85,4 +113,3 @@
   </script>
 </body>
 </html>
-
