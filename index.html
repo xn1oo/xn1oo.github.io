@@ -111,7 +111,7 @@ canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:
   position:absolute;
   top:50px;
   left:20px;
-  width:200px;
+  width:220px;
   font-family:"Courier New", monospace;
   font-size:1rem;
   text-shadow:0 0 5px white,0 0 10px white;
@@ -163,7 +163,10 @@ playButton.addEventListener("click",()=>{
   playButton.classList.remove("show");
   playButton.classList.add("fadeOut");
   centerText.classList.add("moveUp");
-  setTimeout(()=>{moon.style.opacity=1;setTimeout(startNamePrompt,2000);},1200);
+  setTimeout(()=>{
+    moon.style.opacity=1;
+    setTimeout(runCodeTyping,2000); // start original messages
+  },1200);
 });
 
 // TIMER
@@ -171,17 +174,50 @@ let minutes=0;
 const timer=document.getElementById("timer");
 setInterval(()=>{minutes++;timer.textContent="Time: "+minutes+" min";},60000);
 
-// TYPING EFFECT (SLOWER)
-function typeLine(line, callback){
+// SLOW TYPING FUNCTION
+function typeLine(line, callback, speed=100){
   let i=0;
   function typeChar(){
     if(i<line.length){
       typedText.textContent+=line.charAt(i);
       i++;
-      setTimeout(typeChar,100); // slower typing
+      setTimeout(typeChar,speed);
     } else callback();
   }
   typeChar();
+}
+
+// ORIGINAL CODE-TYPING MESSAGES
+const messages = [
+  ["Welcome,",1000," to my Website."],
+  ["I Created this while I was sick at home,",1000," and also because I was bored."],
+  ["But anyways just sit here and just do whatever"]
+];
+
+let msgIndex=0;
+let partIndex=0;
+
+function runCodeTyping(){
+  if(msgIndex<messages.length){
+    const parts = messages[msgIndex];
+    function typeNextPart(){
+      if(partIndex<parts.length){
+        if(typeof parts[partIndex]==="string"){
+          typeLine(parts[partIndex],()=>{partIndex++;typeNextPart();},100); // slower
+        } else if(typeof parts[partIndex]==="number"){
+          setTimeout(()=>{partIndex++;typeNextPart();},parts[partIndex]);
+        }
+      } else {
+        msgIndex++;
+        partIndex=0;
+        typedText.textContent+="\n";
+        runCodeTyping();
+      }
+    }
+    typeNextPart();
+  } else {
+    setTimeout(startNamePrompt,500); // ask for name after messages
+  }
 }
 
 // ASK FOR NAME
@@ -196,8 +232,8 @@ function startNamePrompt(){
       const name=input.value.trim();
       typingBox.innerHTML="";
       typeLine("Hello, "+name,()=>{
-        setTimeout(()=>{typingBox.style.display="none";showLeaderboard(name);},1000);
-      });
+        setTimeout(()=>{typedText.style.display="none";showLeaderboard(name);},1000);
+      },100);
       saveUser(name);
     }
   });
@@ -214,7 +250,6 @@ function saveUser(name){
 function showLeaderboard(currentName){
   leaderboard.style.display="block";
   let users=JSON.parse(localStorage.getItem("xn1ooUsers")||"[]");
-  // sort descending by time
   users.sort((a,b)=>b.time-a.time);
   leaderboard.innerHTML="Leaderboard:\n";
   users.forEach((u,i)=>{
