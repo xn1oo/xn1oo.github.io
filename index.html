@@ -113,6 +113,19 @@ canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:
   text-shadow:0 0 5px white,0 0 10px white;
   display:none;
 }
+
+/* Current user display */
+#currentUser {
+  position: absolute;
+  bottom: 30px;
+  left: 10px;
+  font-family: "Courier New", monospace;
+  font-size: 1rem;
+  color: white;
+  text-shadow: 0 0 10px white, 0 0 20px white;
+}
+
+/* Timer */
 #timer {
   position:absolute;
   bottom:10px;
@@ -132,6 +145,7 @@ canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:
 <div id="moon"></div>
 <div id="typingBox"><span id="typedText"></span><span class="cursor"></span></div>
 <div id="leaderboard"></div>
+<div id="currentUser">Your name: </div>
 <div id="timer">Time: 0 min</div>
 
 <!-- Firebase SDKs -->
@@ -141,13 +155,13 @@ canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:
 <script>
 // ===== FIREBASE CONFIG =====
 const firebaseConfig = {
-  apiKey: "AIzaSyB4CcE_afYUrjwpp_DCaJwUuow478JRfP8",
-  authDomain: "xn1oo-bb64d.firebaseapp.com",
-  databaseURL: "https://xn1oo-bb64d-default-rtdb.firebaseio.com",
-  projectId: "xn1oo-bb64d",
-  storageBucket: "xn1oo-bb64d.firebasestorage.app",
-  messagingSenderId: "767448528500",
-  appId: "1:767448528500:web:6a39c8c16abb037643c321"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
@@ -169,6 +183,7 @@ const moon = document.getElementById("moon");
 const typedText = document.getElementById("typedText");
 const typingBox = document.getElementById("typingBox");
 const leaderboard = document.getElementById("leaderboard");
+const currentUserDiv = document.getElementById("currentUser");
 
 // ===== TIMER =====
 let minutes = parseInt(localStorage.getItem("xn1ooTime") || "0");
@@ -181,11 +196,12 @@ setInterval(()=>{
   timer.textContent = "Time: "+minutes+" min";
   localStorage.setItem("xn1ooTime", minutes);
 
-  // Update Firebase
   const storedName = localStorage.getItem("xn1ooName");
   if(storedName){
     database.ref('users/'+storedName).set({name:storedName,time:minutes});
   }
+
+  // Update leaderboard in real-time
 },60000);
 
 // ===== PLAY BUTTON =====
@@ -242,15 +258,23 @@ function runCodeTyping(){
     }
     typeNextPart();
   } else {
-    checkName(); // after messages, check if name exists
+    checkName();
   }
 }
 
 // ===== CHECK IF USER ALREADY EXISTS =====
+function updateCurrentUserName() {
+  const storedName = localStorage.getItem("xn1ooName");
+  if(storedName){
+    currentUserDiv.textContent = "Your name: " + storedName;
+  }
+}
+
 function checkName(){
   const storedName = localStorage.getItem("xn1ooName");
   if(storedName){
     typedText.textContent="";
+    updateCurrentUserName();
     typeLine("Hello, "+storedName,()=>{
       setTimeout(()=>{typedText.style.display="none"; showGlobalLeaderboard();},1000);
     },100);
@@ -270,6 +294,7 @@ function startNamePrompt(){
     if(e.key==="Enter" && input.value.trim()!==""){
       const name=input.value.trim();
       localStorage.setItem("xn1ooName", name);
+      updateCurrentUserName();
       typingBox.innerHTML="";
       typeLine("Hello, "+name,()=>{
         setTimeout(()=>{typedText.style.display="none"; showGlobalLeaderboard();},1000);
@@ -281,8 +306,7 @@ function startNamePrompt(){
 
 // ===== GLOBAL LEADERBOARD =====
 function showGlobalLeaderboard(){
-  leaderboard.style.display="block";
-  
+  leaderboard.style.display="block";  
   database.ref('users').on('value', (snapshot)=>{
     const data = snapshot.val();
     if(!data) return;
@@ -295,6 +319,9 @@ function showGlobalLeaderboard(){
     });
   });
 }
+
+// Call current user name on load
+window.addEventListener("load", updateCurrentUserName);
 </script>
 </body>
 </html>
