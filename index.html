@@ -396,4 +396,62 @@ function showGlobalLeaderboard(){
     const sortedUsers = Object.values(data).sort((a,b)=>b.time - a.time);
     leaderboard.innerHTML = "<strong>Leaderboard:</strong><br>";
     sortedUsers.forEach((u,i)=>{
-      const entry = document.createElement("
+      const entry = document.createElement("div");
+      entry.textContent = `${i+1}. ${u.name}: ${u.time} min`;
+      if(u.name === storedName){
+        entry.style.color = "#00ffff";
+        entry.style.textShadow = "0 0 5px #00ffff,0 0 10px #00ffff";
+        entry.style.fontWeight = "bold";
+      }
+      leaderboard.appendChild(entry);
+    });
+  });
+}
+
+// ===== MOON CLICK TO TOGGLE STORE =====
+moon.addEventListener("click", () => { storeGUI.classList.toggle("show"); });
+
+// ===== DRAG STORE GUI =====
+let isDragging=false, offsetX=0, offsetY=0;
+storeHeader.addEventListener("mousedown", (e)=>{
+  isDragging=true;
+  offsetX=e.clientX-storeGUI.offsetLeft;
+  offsetY=e.clientY-storeGUI.offsetTop;
+  storeGUI.style.cursor="grabbing";
+});
+document.addEventListener("mouseup",()=>{isDragging=false; storeGUI.style.cursor="grab";});
+document.addEventListener("mousemove",(e)=>{
+  if(isDragging){
+    let x=e.clientX-offsetX;
+    let y=e.clientY-offsetY;
+    x=Math.max(0,Math.min(window.innerWidth-storeGUI.offsetWidth,x));
+    y=Math.max(0,Math.min(window.innerHeight-storeGUI.offsetHeight,y));
+    storeGUI.style.left=x+"px";
+    storeGUI.style.top=y+"px";
+  }
+});
+
+// ===== COLLAPSIBLE SECTIONS =====
+document.querySelectorAll('.sectionTitle').forEach(title=>{
+  title.addEventListener('click',()=>{
+    const content = title.nextElementSibling;
+    if(content.style.maxHeight){
+      content.style.maxHeight = null;
+    } else {
+      content.style.maxHeight = content.scrollHeight + "px";
+    }
+  });
+});
+
+// ===== STORE ITEM CLICK EVENTS =====
+document.querySelectorAll('.storeItem').forEach(item=>{
+  item.addEventListener('click',()=>{
+    console.log('Clicked:',item.textContent);
+    // Add effect/color functionality here
+  });
+});
+
+window.addEventListener("load", updateCurrentUserName);
+</script>
+</body>
+</html>
