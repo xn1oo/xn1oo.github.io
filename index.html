@@ -154,14 +154,22 @@ const typingBox = document.getElementById("typingBox");
 const leaderboard = document.getElementById("leaderboard");
 
 // TIMER WITH ACCUMULATION
+// TIMER WITH ACCUMULATION
 let minutes = parseInt(localStorage.getItem("xn1ooTime") || "0");
 const timer = document.getElementById("timer");
 timer.textContent = "Time: " + minutes + " min";
+
 setInterval(()=>{
   minutes++;
-  timer.textContent="Time: "+minutes+" min";
+  timer.textContent = "Time: "+minutes+" min";
   localStorage.setItem("xn1ooTime", minutes);
-},60000);
+
+  // Update leaderboard in real-time
+  const lbEntry = document.querySelector("#leaderboard div");
+  if(lbEntry){
+    lbEntry.textContent = `1. ${localStorage.getItem("xn1ooName")}: ${minutes} min`;
+  }
+}, 60000);
 
 
 // PLAY BUTTON
