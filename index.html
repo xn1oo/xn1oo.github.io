@@ -1,366 +1,408 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>XN1OO</title>
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      font-family: monospace;
-      color: white;
-      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
-      background-size: 400% 400%;
-      animation: gradientBG 15s ease infinite;
-      overflow: hidden;
-    }
-    @keyframes gradientBG {
-      0% {background-position: 0% 50%;}
-      50% {background-position: 100% 50%;}
-      100% {background-position: 0% 50%;}
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>X N 1 O O</title>
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  background: linear-gradient(to bottom, #0d0d2b, #000000);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  color: white;
+  font-family: "Courier New", monospace;
+}
 
-    #centerText {
-      position: absolute;
-      top: 40%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 48px;
-      font-weight: bold;
-      transition: all 1s ease;
-      text-shadow: 0 0 10px white;
-    }
-    #playButton {
-      position: absolute;
-      top: 60%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 120px;
-      height: 23px;
-      border-radius: 12px;
-      background: #444;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-family: 'Courier New', monospace;
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0% { box-shadow: 0 0 5px white; }
-      50% { box-shadow: 0 0 15px white; }
-      100% { box-shadow: 0 0 5px white; }
-    }
-    #moon {
-      position: absolute;
-      top: 50px;
-      right: 80px;
-      width: 80px;
-      height: 80px;
-      background: url('https://i.ibb.co/zfyzQ5q/pixel-moon.png') no-repeat center/cover;
-      display: none;
-      cursor: pointer;
-    }
+/* Stars */
+canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events:none; }
 
-    /* Store GUI */
-    #storeGUI {
-      position: absolute;
-      top: 100px;
-      left: 100px;
-      width: 320px;
-      height: auto;
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(8px);
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.3);
-      box-shadow: 0 0 15px rgba(255,255,255,0.3);
-      padding: 10px;
-      display: none;
-      cursor: grab;
-    }
-    #storeHeader {
-      font-size: 20px;
-      font-weight: bold;
-      text-shadow: 0 0 8px white;
-      margin-bottom: 10px;
-      animation: pulse 2s infinite;
-    }
+/* Center text */
+#centerText {
+  font-size: 4rem;
+  color: white;
+  text-shadow: 0 0 20px white,0 0 40px white;
+  animation: pulse 2s infinite alternate;
+  transition: all 1s ease-in-out;
+}
+@keyframes pulse {
+  from { text-shadow:0 0 10px white,0 0 20px white; }
+  to { text-shadow:0 0 20px white,0 0 40px white; }
+}
 
-    .section {
-      margin: 10px 0;
-      border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 6px;
-      overflow: hidden;
-    }
-    .sectionTitle {
-      padding: 8px;
-      background: rgba(255,255,255,0.05);
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-      text-shadow: 0 0 8px white;
-      transition: background 0.3s;
-    }
-    .sectionTitle:hover {
-      background: rgba(255,255,255,0.1);
-    }
-    .sectionContent {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.5s ease;
-    }
-    .sectionContent.open {
-      max-height: 500px;
-    }
-    .storeItem {
-      padding: 6px 10px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .storeItem:hover {
-      background: rgba(255,255,255,0.1);
-    }
+/* Play button */
+#playButton {
+  position: absolute;
+  bottom: 20%;
+  opacity: 0;
+  visibility: hidden;
+  padding: 10px 20px;
+  width: 120px;
+  height: 40px;
+  border: none;
+  border-radius: 20px;
+  background: black;
+  color: white;
+  font-size: 1rem;
+  font-family: "Courier New", monospace;
+  text-shadow:0 0 10px white,0 0 20px white;
+  cursor: pointer;
+  animation: pulse 2s infinite alternate;
+  transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+#playButton.show { opacity:1; visibility:visible; }
+.fadeOut { opacity:0 !important; visibility:hidden !important; transition:opacity 1s ease,visibility 1s ease; }
+.moveUp { transform: translateY(-150px) scale(0.7); }
 
-    #leaderboard {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      font-size: 16px;
-      white-space: pre;
-    }
-    #userInfo {
-      position: absolute;
-      bottom: 40px;
-      left: 20px;
-      font-size: 16px;
-    }
-    #timeSpent {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      font-size: 16px;
-    }
-    #typingText {
-      position: absolute;
-      bottom: 100px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 18px;
-      white-space: pre;
-    }
-    .cursor {
-      display: inline-block;
-      width: 10px;
-      background: white;
-      margin-left: 2px;
-      animation: blink 0.8s infinite;
-    }
-    @keyframes blink {
-      0%, 50% { opacity: 1; }
-      51%, 100% { opacity: 0; }
-    }
-  </style>
+/* Moon */
+#moon {
+  position:absolute;
+  top:50px;
+  right:100px;
+  width:60px;
+  height:60px;
+  background:white;
+  border-radius:50%;
+  box-shadow:0 0 20px white,0 0 40px white;
+  opacity:0;
+  transition: opacity 2s ease;
+  cursor:pointer;
+}
+
+/* Typing box */
+#typingBox {
+  margin-top:40px;
+  font-size:1.2rem;
+  white-space: pre-line;
+  text-shadow:0 0 10px white,0 0 20px white;
+}
+.cursor {
+  display:inline-block;
+  width:10px;
+  background:white;
+  margin-left:2px;
+  animation: blink 1s infinite;
+}
+@keyframes blink { 50% { background: transparent; } }
+
+/* Input for name */
+#nameInput {
+  font-family:"Courier New", monospace;
+  font-size:1.2rem;
+  padding:5px 8px;
+  border-radius:5px;
+  border:none;
+  outline:none;
+  margin-top:10px;
+  background:black;
+  color:white;
+  box-shadow:0 0 10px white;
+}
+
+/* Leaderboard */
+#leaderboard {
+  position:absolute;
+  top:50px;
+  left:20px;
+  width:220px;
+  font-family:"Courier New", monospace;
+  font-size:1rem;
+  text-shadow:0 0 5px white,0 0 10px white;
+  display:none;
+}
+
+/* Current user display */
+#currentUser {
+  position: absolute;
+  bottom: 30px;
+  left: 10px;
+  font-family: "Courier New", monospace;
+  font-size: 1rem;
+  color: white;
+  text-shadow: 0 0 10px white, 0 0 20px white;
+}
+
+/* Timer */
+#timer {
+  position:absolute;
+  bottom:10px;
+  left:10px;
+  font-family:"Courier New", monospace;
+  font-size:1rem;
+  color:white;
+  text-shadow:0 0 10px white,0 0 20px white;
+}
+
+/* Store GUI */
+#storeGUI {
+position: absolute;
+  top: 100px;
+  left: 100px;
+  width: 500px;   /* wider */
+  height: 350px;  /* taller */
+  background: rgba(255, 255, 255, 0.05); /* very transparent */
+  backdrop-filter: blur(15px); /* frosted glass blur */
+  border: 2px solid white;
+  border-radius: 10px;
+  box-shadow: 0 0 20px white, 0 0 40px white; /* glow effect */
+  display: none;
+  cursor: grab;
+}
+
+
+#storeGUI.show {
+  display: block;
+  animation: pulse 2s infinite alternate;
+}
+
+#storeHeader {
+  font-family: "Courier New", monospace;
+  font-size: 1.2rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 5px;
+  border-bottom: 1px solid white;
+  color: white;
+  text-shadow: 0 0 10px white, 0 0 20px white;
+  user-select: none;
+  cursor: grab;
+}
+</style>
 </head>
 <body>
-  <div id="centerText">X N 1 O O</div>
-  <button id="playButton" style="display:none;">Play</button>
-  <div id="moon"></div>
+<canvas id="stars"></canvas>
 
-  <!-- Store -->
-  <div id="storeGUI">
-    <div id="storeHeader">Store</div>
-    <div class="section">
-      <div class="sectionTitle">Name Effects</div>
-      <div class="sectionContent">
-        <div class="storeItem">Sparkles</div>
-        <div class="storeItem">Flash</div>
-        <div class="storeItem">Snow</div>
-      </div>
-    </div>
-    <div class="section">
-      <div class="sectionTitle">Name Colors</div>
-      <div class="sectionContent">
-        <div class="storeItem">Pink</div>
-        <div class="storeItem">Red</div>
-        <div class="storeItem">Blue</div>
-        <div class="storeItem">Orange</div>
-        <div class="storeItem">Black</div>
-      </div>
-    </div>
-  </div>
+<div id="centerText">X N 1 O O</div>
+<button id="playButton">PLAY</button>
+<div id="moon"></div>
+<div id="typingBox"><span id="typedText"></span><span class="cursor"></span></div>
+<div id="leaderboard"></div>
+<div id="currentUser">Your name: </div>
+<div id="timer">Time: 0 min</div>
 
-  <div id="typingText"></div>
-  <div id="leaderboard">Leaderboard:</div>
-  <div id="userInfo"></div>
-  <div id="timeSpent">Time: 0 min</div>
+<!-- Store GUI -->
+<div id="storeGUI">
+  <div id="storeHeader">Store</div>
+  <!-- Store content here -->
+</div>
 
-  <script type="module">
-    // Firebase SDK
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyB4CcE_afYUrjwpp_DCaJwUuow478JRfP8",
-      authDomain: "xn1oo-bb64d.firebaseapp.com",
-      databaseURL: "https://xn1oo-bb64d-default-rtdb.firebaseio.com",
-      projectId: "xn1oo-bb64d",
-      storageBucket: "xn1oo-bb64d.firebasestorage.app",
-      messagingSenderId: "767448528500",
-      appId: "1:767448528500:web:6a39c8c16abb037643c321",
-      measurementId: "G-TMZ3FH9WL0"
-    };
+<script>
+// ===== FIREBASE CONFIG =====
+const firebaseConfig = {
+  apiKey: "AIzaSyB4CcE_afYUrjwpp_DCaJwUuow478JRfP8",
+  authDomain: "xn1oo-bb64d.firebaseapp.com",
+  databaseURL: "https://xn1oo-bb64d-default-rtdb.firebaseio.com",
+  projectId: "xn1oo-bb64d",
+  storageBucket: "xn1oo-bb64d.firebasestorage.app",
+  messagingSenderId: "767448528500",
+  appId: "1:767448528500:web:6a39c8c16abb037643c321",
+  measurementId: "G-TMZ3FH9WL0"
+};
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+// ===== STAR BACKGROUND =====
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+let stars=[];
+for(let i=0;i<200;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:Math.random()*2,speed:Math.random()*0.5});}
+function drawStars(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="white";stars.forEach(star=>{ctx.beginPath();ctx.arc(star.x,star.y,star.size,0,Math.PI*2);ctx.fill();star.y+=star.speed;if(star.y>canvas.height){star.y=0;star.x=Math.random()*canvas.width;}});requestAnimationFrame(drawStars);}
+drawStars();
 
-    // --- Core elements
-    const playButton = document.getElementById("playButton");
-    const centerText = document.getElementById("centerText");
-    const moon = document.getElementById("moon");
-    const storeGUI = document.getElementById("storeGUI");
-    const typingText = document.getElementById("typingText");
-    const leaderboardDiv = document.getElementById("leaderboard");
-    const userInfo = document.getElementById("userInfo");
-    const timeSpentDiv = document.getElementById("timeSpent");
+// ===== ELEMENTS =====
+const playButton = document.getElementById("playButton");
+const centerText = document.getElementById("centerText");
+const moon = document.getElementById("moon");
+const typedText = document.getElementById("typedText");
+const typingBox = document.getElementById("typingBox");
+const leaderboard = document.getElementById("leaderboard");
+const currentUserDiv = document.getElementById("currentUser");
+const storeGUI = document.getElementById("storeGUI");
+const storeHeader = document.getElementById("storeHeader");
 
-    let userName = localStorage.getItem("userName") || null;
-    let timeSpent = parseInt(localStorage.getItem("timeSpent")) || 0;
+// ===== TIMER =====
+let minutes = parseInt(localStorage.getItem("xn1ooTime") || "0");
+const timer = document.getElementById("timer");
+timer.textContent = "Time: " + minutes + " min";
 
-    // Show Play button after 2s
-    setTimeout(() => playButton.style.display = "block", 2000);
+setInterval(()=>{
+  minutes++;
+  timer.textContent = "Time: "+minutes+" min";
+  localStorage.setItem("xn1ooTime", minutes);
+  const storedName = localStorage.getItem("xn1ooName");
+  if(storedName){
+    database.ref('users/'+storedName).set({name:storedName,time:minutes});
+  }
+},60000);
 
-    playButton.addEventListener("click", () => {
-      playButton.style.display = "none";
-      centerText.style.top = "20%";
-      centerText.style.fontSize = "32px";
-      moon.style.display = "block";
+// ===== PLAY BUTTON =====
+setTimeout(()=>{playButton.classList.add("show");},2000);
+playButton.addEventListener("click",()=>{
+  playButton.classList.remove("show");
+  playButton.classList.add("fadeOut");
+  centerText.classList.add("moveUp");
+  setTimeout(()=>{
+    moon.style.opacity=1;
+    setTimeout(runCodeTyping,2000);
+  },1200);
+});
 
-      runTypingSequence();
-      startTimer();
-    });
+// ===== SLOW TYPING FUNCTION =====
+function typeLine(line, callback, speed=100){
+  let i=0;
+  function typeChar(){
+    if(i<line.length){
+      typedText.textContent+=line.charAt(i);
+      i++;
+      setTimeout(typeChar,speed);
+    } else callback();
+  }
+  typeChar();
+}
 
-    // Typing effect
-    function typeWriter(text, delay=50) {
-      return new Promise(resolve => {
-        let i = 0;
-        const cursor = document.createElement("span");
-        cursor.className = "cursor";
-        typingText.appendChild(cursor);
+// ===== TYPING MESSAGES =====
+const messages = [
+  ["Welcome,",1000," to my Website."],
+  ["I Created this while I was sick at home,",1000," and also because I was bored."],
+  ["But anyways just sit here and just do whatever"]
+];
 
-        function type() {
-          if (i < text.length) {
-            cursor.insertAdjacentText("beforebegin", text.charAt(i));
-            i++;
-            setTimeout(type, delay);
-          } else {
-            setTimeout(() => {
-              cursor.remove();
-              resolve();
-            }, 500);
-          }
+let msgIndex=0;
+let partIndex=0;
+
+function runCodeTyping(){
+  if(msgIndex<messages.length){
+    const parts = messages[msgIndex];
+    function typeNextPart(){
+      if(partIndex<parts.length){
+        if(typeof parts[partIndex]==="string"){
+          typeLine(parts[partIndex],()=>{partIndex++;typeNextPart();},100);
+        } else if(typeof parts[partIndex]==="number"){
+          setTimeout(()=>{partIndex++;typeNextPart();},parts[partIndex]);
         }
-        type();
-      });
-    }
-
-    async function runTypingSequence() {
-      if (!userName) {
-        await typeWriter("Welcome, ");
-        await new Promise(r => setTimeout(r, 1000));
-        await typeWriter("to my Website.");
-        typingText.innerHTML += "\\n";
-        await typeWriter("I Created this while I was sick at home, ");
-        await new Promise(r => setTimeout(r, 1000));
-        await typeWriter("and also because I was bored.");
-        typingText.innerHTML += "\\n";
-        await typeWriter("But anyways just sit here and just do whatever.");
-        typingText.innerHTML += "\\n";
-        await typeWriter("What's your name? (click to edit)");
-
-        const nameSpan = document.createElement("span");
-        nameSpan.contentEditable = true;
-        nameSpan.style.borderBottom = "1px dashed white";
-        nameSpan.style.marginLeft = "5px";
-        typingText.appendChild(nameSpan);
-
-        nameSpan.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            userName = nameSpan.innerText.trim();
-            localStorage.setItem("userName", userName);
-            typingText.innerHTML = "";
-            greetUser();
-          }
-        });
       } else {
-        greetUser();
+        msgIndex++;
+        partIndex=0;
+        typedText.textContent+="\n";
+        runCodeTyping();
       }
     }
+    typeNextPart();
+  } else {
+    checkName();
+  }
+}
 
-    async function greetUser() {
-      await typeWriter("Hello, " + userName);
-      setTimeout(() => typingText.innerHTML = "", 1000);
-    }
+// ===== CURRENT USER DISPLAY =====
+function updateCurrentUserName() {
+  const storedName = localStorage.getItem("xn1ooName");
+  if(storedName){
+    currentUserDiv.textContent = "Your name: " + storedName;
+  }
+}
 
-    // Timer
-    function startTimer() {
-      updateTimeDisplay();
-      setInterval(() => {
-        timeSpent++;
-        localStorage.setItem("timeSpent", timeSpent);
-        updateTimeDisplay();
-        updateFirebase();
-      }, 60000);
-    }
-    function updateTimeDisplay() {
-      timeSpentDiv.textContent = "Time: " + timeSpent + " min";
-      userInfo.textContent = "Your name: " + (userName || "(not set)");
-    }
+// ===== CHECK NAME =====
+function checkName(){
+  const storedName = localStorage.getItem("xn1ooName");
+  if(storedName){
+    typedText.textContent="";
+    updateCurrentUserName();
+    typeLine("Hello, "+storedName,()=>{
+      setTimeout(()=>{typedText.style.display="none"; showGlobalLeaderboard();},1000);
+    },100);
+  } else {
+    startNamePrompt();
+  }
+}
 
-    // Firebase update
-    function updateFirebase() {
-      if (userName) {
-        set(ref(db, "users/" + userName), { timeSpent });
+// ===== ASK FOR NAME =====
+function startNamePrompt(){
+  typedText.textContent="What's your name? ";
+  const input = document.createElement("input");
+  input.id="nameInput";
+  typingBox.appendChild(input);
+  input.focus();
+  input.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter" && input.value.trim()!==""){
+      const name=input.value.trim();
+      localStorage.setItem("xn1ooName", name);
+      updateCurrentUserName();
+      typingBox.innerHTML="";
+      typeLine("Hello, "+name,()=>{
+        setTimeout(()=>{typedText.style.display="none"; showGlobalLeaderboard();},1000);
+      },100);
+      database.ref('users/'+name).set({name:name,time:minutes});
+    }
+  });
+}
+
+// ===== GLOBAL LEADERBOARD =====
+function showGlobalLeaderboard(){
+  leaderboard.style.display="block";  
+  const storedName = localStorage.getItem("xn1ooName");
+  database.ref('users').on('value', (snapshot)=>{
+    const data = snapshot.val();
+    if(!data) return;
+    const sortedUsers = Object.values(data).sort((a,b)=>b.time - a.time);
+    leaderboard.innerHTML = "<strong>Leaderboard:</strong><br>";
+    sortedUsers.forEach((u,i)=>{
+      const entry = document.createElement("div");
+      entry.textContent = `${i+1}. ${u.name}: ${u.time} min`;
+      if(u.name === storedName){
+        entry.style.color = "#00ffff";
+        entry.style.textShadow = "0 0 5px #00ffff,0 0 10px #00ffff";
+        entry.style.fontWeight = "bold";
       }
-    }
-    onValue(ref(db, "users"), (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const sorted = Object.entries(data)
-          .sort((a,b) => b[1].timeSpent - a[1].timeSpent);
-        leaderboardDiv.textContent = "Leaderboard:\\n" + 
-          sorted.map((e,i)=>`${i+1}. ${e[0]}: ${e[1].timeSpent} min`).join("\\n");
-      }
+      leaderboard.appendChild(entry);
     });
+  });
+}
 
-    // Store GUI toggle
-    moon.addEventListener("click", () => {
-      storeGUI.style.display = storeGUI.style.display === "block" ? "none" : "block";
-    });
+// ===== MOON CLICK TO TOGGLE STORE =====
+moon.addEventListener("click", () => {
+  storeGUI.classList.toggle("show");
+});
 
-    // Store section toggle
-    document.querySelectorAll('.sectionTitle').forEach(title => {
-      title.addEventListener('click', () => {
-        const content = title.nextElementSibling;
-        content.classList.toggle('open');
-      });
-    });
+// ===== DRAG STORE GUI =====
+let isDragging = false;
+let offsetX = 0;
+let offsetY = 0;
 
-    // Make store draggable
-    storeGUI.addEventListener("mousedown", function(e) {
-      let shiftX = e.clientX - storeGUI.getBoundingClientRect().left;
-      let shiftY = e.clientY - storeGUI.getBoundingClientRect().top;
-      function moveAt(pageX, pageY) {
-        storeGUI.style.left = pageX - shiftX + "px";
-        storeGUI.style.top = pageY - shiftY + "px";
-      }
-      function onMouseMove(e) {
-        moveAt(e.pageX, e.pageY);
-      }
-      document.addEventListener("mousemove", onMouseMove);
-      document.addEventListener("mouseup", () => {
-        document.removeEventListener("mousemove", onMouseMove);
-      }, { once: true });
-    });
-  </script>
+storeHeader.addEventListener("mousedown", (e) => {
+  isDragging = true;
+  offsetX = e.clientX - storeGUI.offsetLeft;
+  offsetY = e.clientY - storeGUI.offsetTop;
+  storeGUI.style.cursor = "grabbing";
+});
+
+document.addEventListener("mouseup", () => {
+  isDragging = false;
+  storeGUI.style.cursor = "grab";
+});
+
+document.addEventListener("mousemove", (e) => {
+  if(isDragging){
+    let x = e.clientX - offsetX;
+    let y = e.clientY - offsetY;
+    x = Math.max(0, Math.min(window.innerWidth - storeGUI.offsetWidth, x));
+    y = Math.max(0, Math.min(window.innerHeight - storeGUI.offsetHeight, y));
+    storeGUI.style.left = x + "px";
+    storeGUI.style.top = y + "px";
+  }
+});
+
+// ===== INIT =====
+window.addEventListener("load", updateCurrentUserName);
+</script>
 </body>
 </html>
