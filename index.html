@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>X N 1 O O</title>
+<title>XN1OO</title>
 <style>
 body {
   margin: 0;
@@ -139,24 +139,20 @@ canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:
 
 /* Store GUI */
 #storeGUI {
-position: absolute;
+  position: absolute;
   top: 100px;
   left: 100px;
-  width: 500px;   /* wider */
-  height: 350px;  /* taller */
-  background: rgba(255, 255, 255, 0.05); /* very transparent */
-  backdrop-filter: blur(15px); /* frosted glass blur */
+  width: 500px;
+  height: 350px;
+  background: rgba(255, 255, 255, 0.05); /* transparent */
+  backdrop-filter: blur(15px); /* frosted glass */
   border: 2px solid white;
   border-radius: 10px;
-  box-shadow: 0 0 20px white, 0 0 40px white; /* glow effect */
+  box-shadow: 0 0 20px white, 0 0 40px white;
   display: none;
   cursor: grab;
-}
-
-
-#storeGUI.show {
-  display: block;
-  animation: pulse 2s infinite alternate;
+  overflow: hidden;
+  padding: 5px 10px;
 }
 
 #storeHeader {
@@ -170,6 +166,33 @@ position: absolute;
   text-shadow: 0 0 10px white, 0 0 20px white;
   user-select: none;
   cursor: grab;
+}
+
+.storeSection { margin-top: 10px; }
+.sectionTitle {
+  font-family: "Courier New", monospace;
+  font-size: 1rem;
+  color: white;
+  padding: 5px;
+  text-shadow: 0 0 5px white,0 0 10px white;
+  cursor: pointer;
+  user-select: none;
+}
+.sectionContent {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease;
+  margin-left: 10px;
+}
+.storeItem {
+  padding: 5px 0;
+  cursor: pointer;
+  text-shadow: 0 0 5px white,0 0 10px white;
+  color: white;
+}
+.storeItem:hover {
+  text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+  color: #00ffff;
 }
 </style>
 </head>
@@ -187,7 +210,24 @@ position: absolute;
 <!-- Store GUI -->
 <div id="storeGUI">
   <div id="storeHeader">Store</div>
-  <!-- Store content here -->
+  <div class="storeSection">
+    <div class="sectionTitle">Name Effects</div>
+    <div class="sectionContent">
+      <div class="storeItem">Sparkles</div>
+      <div class="storeItem">Flash</div>
+      <div class="storeItem">Snow</div>
+    </div>
+  </div>
+  <div class="storeSection">
+    <div class="sectionTitle">Name Colors</div>
+    <div class="sectionContent">
+      <div class="storeItem">Pink</div>
+      <div class="storeItem">Red</div>
+      <div class="storeItem">Blue</div>
+      <div class="storeItem">Orange</div>
+      <div class="storeItem">Black</div>
+    </div>
+  </div>
 </div>
 
 <!-- Firebase SDKs -->
@@ -356,53 +396,4 @@ function showGlobalLeaderboard(){
     const sortedUsers = Object.values(data).sort((a,b)=>b.time - a.time);
     leaderboard.innerHTML = "<strong>Leaderboard:</strong><br>";
     sortedUsers.forEach((u,i)=>{
-      const entry = document.createElement("div");
-      entry.textContent = `${i+1}. ${u.name}: ${u.time} min`;
-      if(u.name === storedName){
-        entry.style.color = "#00ffff";
-        entry.style.textShadow = "0 0 5px #00ffff,0 0 10px #00ffff";
-        entry.style.fontWeight = "bold";
-      }
-      leaderboard.appendChild(entry);
-    });
-  });
-}
-
-// ===== MOON CLICK TO TOGGLE STORE =====
-moon.addEventListener("click", () => {
-  storeGUI.classList.toggle("show");
-});
-
-// ===== DRAG STORE GUI =====
-let isDragging = false;
-let offsetX = 0;
-let offsetY = 0;
-
-storeHeader.addEventListener("mousedown", (e) => {
-  isDragging = true;
-  offsetX = e.clientX - storeGUI.offsetLeft;
-  offsetY = e.clientY - storeGUI.offsetTop;
-  storeGUI.style.cursor = "grabbing";
-});
-
-document.addEventListener("mouseup", () => {
-  isDragging = false;
-  storeGUI.style.cursor = "grab";
-});
-
-document.addEventListener("mousemove", (e) => {
-  if(isDragging){
-    let x = e.clientX - offsetX;
-    let y = e.clientY - offsetY;
-    x = Math.max(0, Math.min(window.innerWidth - storeGUI.offsetWidth, x));
-    y = Math.max(0, Math.min(window.innerHeight - storeGUI.offsetHeight, y));
-    storeGUI.style.left = x + "px";
-    storeGUI.style.top = y + "px";
-  }
-});
-
-// ===== INIT =====
-window.addEventListener("load", updateCurrentUserName);
-</script>
-</body>
-</html>
+      const entry = document.createElement("
