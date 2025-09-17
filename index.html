@@ -160,12 +160,9 @@ timer.textContent = "Time: " + minutes + " min";
 setInterval(()=>{
   minutes++;
   timer.textContent="Time: "+minutes+" min";
-  // save continuously
-  let name = localStorage.getItem("xn1ooName");
-  if(name){
-    saveUser(name);
-  }
+  localStorage.setItem("xn1ooTime", minutes);
 },60000);
+
 
 // PLAY BUTTON
 setTimeout(()=>{playButton.classList.add("show");},2000);
@@ -273,15 +270,22 @@ function saveUser(name){
 // SHOW VERTICAL LEADERBOARD
 function showLeaderboard(currentName){
   leaderboard.style.display="block";
-  let users=JSON.parse(localStorage.getItem("xn1ooUsers")||"[]");
-  users.sort((a,b)=>b.time-a.time);
+  
+  // Get only the current user from localStorage
+  let users = [];
+  let time = parseInt(localStorage.getItem("xn1ooTime") || "0");
+  if(currentName){
+    users.push({name: currentName, time: time});
+  }
+  
   leaderboard.innerHTML = "<strong>Leaderboard:</strong><br>";
   users.forEach((u,i)=>{
     const entry = document.createElement("div");
-    entry.textContent = `${i+1}. ${u.name}`;
+    entry.textContent = `${i+1}. ${u.name}: ${u.time} min`;
     leaderboard.appendChild(entry);
   });
 }
+
 </script>
 </body>
 </html>
