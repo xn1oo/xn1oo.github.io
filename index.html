@@ -201,32 +201,6 @@ position: absolute;
 </div>
 <style>
 /* your existing CSS here ... */
-// 4× Time
-const quadrupleTimeBtn = document.getElementById("quadrupleTimeBtn");
-
-function updateQuadrupleButton() {
-  if (timeMultiplier >= 4) {
-    quadrupleTimeBtn.textContent = "4× Time (Owned)";
-    quadrupleTimeBtn.disabled = true;
-    quadrupleTimeBtn.style.opacity = 0.6;
-  }
-}
-updateQuadrupleButton();
-
-quadrupleTimeBtn.addEventListener("click", () => {
-  if (minutes >= 25 && timeMultiplier < 4) {
-    minutes -= 25;
-    timeMultiplier = 4;
-    localStorage.setItem("xn1ooTime", minutes);
-    localStorage.setItem("xn1ooMultiplier", timeMultiplier);
-    timer.textContent = "Time: " + minutes + " min";
-    updateQuadrupleButton();
-    updateStoreButtons(); // keep 2× button updated too
-    alert("Purchased 4× Time! Your timer will now increase 4× faster.");
-  } else {
-    alert("Not enough minutes!");
-  }
-});
 
 /* Store sections (new) */
 .section {
