@@ -29,31 +29,31 @@
     window.addEventListener("resize", resize);
     resize();
 
-    // --- Snowflakes ---
+    // --- Snowflakes (smaller) ---
     const snowflakes = [];
     function createSnowflake() {
       return {
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        radius: Math.random() * 2 + 1,
-        speed: Math.random() * 1 + 0.5,
+        radius: Math.random() * 1 + 0.5, // smaller radius
+        speed: Math.random() * 0.8 + 0.3,
         drift: Math.random() * 1 - 0.5
       };
     }
-    for (let i = 0; i < 200; i++) snowflakes.push(createSnowflake());
+    for (let i = 0; i < 250; i++) snowflakes.push(createSnowflake());
 
-    // --- Tiny diagonal snow ---
+    // --- Tiny diagonal snow (even smaller) ---
     const tinySnow = [];
     function createTinySnow() {
       return {
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        radius: Math.random() * 0.8 + 0.2,
-        speed: Math.random() * 0.6 + 0.2,
-        drift: -0.8
+        radius: Math.random() * 0.4 + 0.1, // really tiny
+        speed: Math.random() * 0.5 + 0.2,
+        drift: -0.7
       };
     }
-    for (let i = 0; i < 100; i++) tinySnow.push(createTinySnow());
+    for (let i = 0; i < 120; i++) tinySnow.push(createTinySnow());
 
     // --- Light rain ---
     const rain = [];
@@ -61,8 +61,8 @@
       return {
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        length: Math.random() * 4 + 2, // shorter
-        speed: Math.random() * 2 + 2   // softer fall
+        length: Math.random() * 4 + 2, // short streak
+        speed: Math.random() * 2 + 2
       };
     }
     for (let i = 0; i < 80; i++) rain.push(createRainDrop());
@@ -88,9 +88,9 @@
       }
       ctx.fill();
 
-      // rain (thin streaks)
+      // rain
       ctx.strokeStyle = "rgba(200,200,255,0.6)";
-      ctx.lineWidth = 0.5; // thinner
+      ctx.lineWidth = 0.5;
       ctx.beginPath();
       for (const drop of rain) {
         ctx.moveTo(drop.x, drop.y);
