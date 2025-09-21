@@ -1,21 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Glowing Snow + Rain</title>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      height: 100vh;
-      background: black;
-    }
-    canvas {
-      display: block;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Glowing Snow + Rain on Video</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    height: 100vh;
+    background: black;
+  }
+
+  /* Video background */
+  #bgVideo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -2;
+  }
+
+  /* Overlay to make particles pop */
+  #overlay {
+    position: fixed;
+    top:0;
+    left:0;
+    width:100vw;
+    height:100vh;
+    background: rgba(0,0,0,0.3); /* adjust darkness */
+    z-index: -1;
+  }
+
+  /* Canvas for snow/rain */
+  #snow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 0;
+  }
+</style>
 </head>
 <body>
+
+<video id="bgVideo" autoplay muted loop playsinline>
+  <source src="your-video.mp4" type="video/mp4">
+</video>
+<div id="overlay"></div>
 <canvas id="snow"></canvas>
 
 <script>
@@ -31,122 +63,108 @@ resize();
 
 // --- Snowflakes ---
 const snowflakes = [];
-function createSnowflake() {
-  return {
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    radius: Math.random() * 0.8 + 0.2,
-    speed: Math.random() * 0.7 + 0.3,
-    drift: Math.random() * 0.6 - 0.3,
-    glow: Math.random() * 1
-  };
+for (let i=0;i<250;i++){
+  snowflakes.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    radius: Math.random()*0.8+0.2,
+    speed: Math.random()*0.7+0.3,
+    drift: Math.random()*0.6-0.3,
+    glow: Math.random()*1
+  });
 }
-for (let i = 0; i < 250; i++) snowflakes.push(createSnowflake());
 
 // --- Tiny drifting snow ---
 const tinySnow = [];
-function createTinySnow() {
-  return {
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    radius: Math.random() * 0.3 + 0.05,
-    speed: Math.random() * 0.4 + 0.2,
+for (let i=0;i<120;i++){
+  tinySnow.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    radius: Math.random()*0.3+0.05,
+    speed: Math.random()*0.4+0.2,
     drift: -0.6,
-    glow: Math.random() * 1
-  };
+    glow: Math.random()*1
+  });
 }
-for (let i = 0; i < 120; i++) tinySnow.push(createTinySnow());
 
 // --- Light rain ---
 const rain = [];
-function createRainDrop() {
-  return {
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    length: Math.random() * 3 + 1.5,
-    speed: Math.random() * 1.5 + 1.5,
-    glow: Math.random() * 0.5 + 0.2
-  };
+for (let i=0;i<80;i++){
+  rain.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    length: Math.random()*3+1.5,
+    speed: Math.random()*1.5+1.5,
+    glow: Math.random()*0.5+0.2
+  });
 }
-for (let i = 0; i < 80; i++) rain.push(createRainDrop());
 
 // --- Draw + Update ---
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
   // Snow glow
-  for (const flake of snowflakes) {
-    const glow = 2 + Math.sin(Date.now() * 0.005 + flake.glow) * 2; // pulsate
+  for (const flake of snowflakes){
+    const glow = 2 + Math.sin(Date.now()*0.005 + flake.glow)*2;
     ctx.fillStyle = "white";
     ctx.shadowBlur = glow;
     ctx.shadowColor = "white";
     ctx.beginPath();
-    ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+    ctx.arc(flake.x, flake.y, flake.radius,0,Math.PI*2);
     ctx.fill();
   }
 
-  for (const flake of tinySnow) {
-    const glow = 1 + Math.sin(Date.now() * 0.005 + flake.glow) * 1;
+  for (const flake of tinySnow){
+    const glow = 1 + Math.sin(Date.now()*0.005 + flake.glow)*1;
     ctx.fillStyle = "white";
     ctx.shadowBlur = glow;
     ctx.shadowColor = "white";
     ctx.beginPath();
-    ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+    ctx.arc(flake.x, flake.y, flake.radius,0,Math.PI*2);
     ctx.fill();
   }
 
   // Rain glow
-  for (const drop of rain) {
-    const glow = drop.glow * (1 + Math.sin(Date.now() * 0.01));
+  for (const drop of rain){
+    const glow = drop.glow*(1+Math.sin(Date.now()*0.01));
     ctx.strokeStyle = "rgba(200,200,255,0.6)";
-    ctx.shadowBlur = glow * 2;
+    ctx.shadowBlur = glow*2;
     ctx.shadowColor = "white";
     ctx.lineWidth = 0.3;
     ctx.beginPath();
     ctx.moveTo(drop.x, drop.y);
-    ctx.lineTo(drop.x, drop.y + drop.length);
+    ctx.lineTo(drop.x, drop.y+drop.length);
     ctx.stroke();
   }
 
   update();
 }
 
-function update() {
-  // snow
-  for (const flake of snowflakes) {
+function update(){
+  // Snow
+  for (const flake of snowflakes){
     flake.y += flake.speed;
-    flake.x += flake.drift * 0.3;
-    if (flake.y > canvas.height) {
-      flake.y = -flake.radius;
-      flake.x = Math.random() * canvas.width;
-    }
+    flake.x += flake.drift*0.3;
+    if(flake.y>canvas.height){flake.y=-flake.radius; flake.x=Math.random()*canvas.width;}
   }
 
-  // tiny snow
-  for (const flake of tinySnow) {
+  // Tiny snow
+  for (const flake of tinySnow){
     flake.y += flake.speed;
     flake.x += flake.drift;
-    if (flake.y > canvas.height || flake.x < 0) {
-      flake.y = -flake.radius;
-      flake.x = canvas.width + Math.random() * 50;
-    }
+    if(flake.y>canvas.height || flake.x<0){flake.y=-flake.radius; flake.x=canvas.width+Math.random()*50;}
   }
 
-  // rain
-  for (const drop of rain) {
+  // Rain
+  for (const drop of rain){
     drop.y += drop.speed;
-    if (drop.y > canvas.height) {
-      drop.y = -drop.length;
-      drop.x = Math.random() * canvas.width;
-    }
+    if(drop.y>canvas.height){drop.y=-drop.length; drop.x=Math.random()*canvas.width;}
   }
 }
 
-function animate() {
-  draw();
-  requestAnimationFrame(animate);
-}
+function animate(){draw(); requestAnimationFrame(animate);}
 animate();
 </script>
+
 </body>
 </html>
