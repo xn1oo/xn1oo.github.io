@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>X N 1 O O</title>
+<title>X N 1 OO</title>
 <style>
 body {
   margin: 0;
@@ -192,9 +192,7 @@ position: absolute;
     <div class="section">
       <div class="sectionHeader" id="perksHeader">Perks ▼</div>
       <div class="sectionBody" id="perksBody">
-        <button id="quadrupleTimeBtn">4× Time (Cost: 25 min)</button>
         <button id="doubleTimeBtn">2× Time (Cost: 10 min)</button>
-
       </div>
     </div>
   </div>
@@ -329,29 +327,31 @@ function typeLine(line, callback, speed=100){
 }
 
 // ===== TYPING MESSAGES =====
-const messages = [
-  ["Yooo,",1000,"],
-  ["Made by - xn1o,",1000,"],
-  ["Heres where you can find all my socials and stuff about xn1o."]
-];
+// Skip messages and go straight to name prompt
+const messages = [];
 
 let msgIndex=0;
 let partIndex=0;
 
 function runCodeTyping(){
-  if(msgIndex<messages.length){
+ function runCodeTyping(){
+  if(messages.length === 0){
+    checkName();
+    return;
+  }
+  if(msgIndex < messages.length){
     const parts = messages[msgIndex];
     function typeNextPart(){
-      if(partIndex<parts.length){
-        if(typeof parts[partIndex]==="string"){
-          typeLine(parts[partIndex],()=>{partIndex++;typeNextPart();},100);
-        } else if(typeof parts[partIndex]==="number"){
-          setTimeout(()=>{partIndex++;typeNextPart();},parts[partIndex]);
+      if(partIndex < parts.length){
+        if(typeof parts[partIndex] === "string"){
+          typeLine(parts[partIndex], ()=>{partIndex++; typeNextPart();}, 100);
+        } else if(typeof parts[partIndex] === "number"){
+          setTimeout(()=>{partIndex++; typeNextPart();}, parts[partIndex]);
         }
       } else {
         msgIndex++;
-        partIndex=0;
-        typedText.textContent+="\n";
+        partIndex = 0;
+        typedText.textContent += "\n";
         runCodeTyping();
       }
     }
@@ -360,6 +360,7 @@ function runCodeTyping(){
     checkName();
   }
 }
+
 
 // ===== CURRENT USER DISPLAY =====
 function updateCurrentUserName() {
