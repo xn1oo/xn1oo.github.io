@@ -1,378 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>X N 1 O O</title>
-<style>
-body {
-  margin: 0;
-  height: 100vh;
-  background: linear-gradient(to bottom, #0d0d2b, #000000);
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  color: white;
-  font-family: "Courier New", monospace;
-}
-
-/* Stars */
-canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events:none; }
-
-/* Center text */
-#centerText {
-  font-size: 4rem;
-  color: white;
-  text-shadow: 0 0 20px white,0 0 40px white;
-  animation: pulse 2s infinite alternate;
-  transition: all 1s ease-in-out;
-}
-@keyframes pulse {
-  from { text-shadow:0 0 10px white,0 0 20px white; }
-  to { text-shadow:0 0 20px white,0 0 40px white; }
-}
-
-/* Play button */
-#playButton {
-  position: absolute;
-  bottom: 20%;
-  opacity: 0;
-  visibility: hidden;
-  padding: 10px 20px;
-  width: 120px;
-  height: 40px;
-  border: none;
-  border-radius: 20px;
-  background: black;
-  color: white;
-  font-size: 1rem;
-  font-family: "Courier New", monospace;
-  text-shadow:0 0 10px white,0 0 20px white;
-  cursor: pointer;
-  animation: pulse 2s infinite alternate;
-  transition: opacity 0.8s ease, visibility 0.8s ease;
-}
-#playButton.show { opacity:1; visibility:visible; }
-.fadeOut { opacity:0 !important; visibility:hidden !important; transition:opacity 1s ease,visibility 1s ease; }
-.moveUp { transform: translateY(-150px) scale(0.7); }
-
-/* Moon */
-#moon {
-  position:absolute;
-  top:50px;
-  right:100px;
-  width:60px;
-  height:60px;
-  background:white;
-  border-radius:50%;
-  box-shadow:0 0 20px white,0 0 40px white;
-  opacity:0;
-  transition: opacity 2s ease;
-  cursor:pointer;
-}
-
-/* Typing box */
-#typingBox {
-  margin-top:40px;
-  font-size:1.2rem;
-  text-shadow:0 0 10px white,0 0 20px white;
-}
-
-/* Input for name */
-#nameInput {
-  font-family:"Courier New", monospace;
-  font-size:1.2rem;
-  padding:5px 8px;
-  border-radius:5px;
-  border:none;
-  outline:none;
-  margin-top:10px;
-  background:black;
-  color:white;
-  box-shadow:0 0 10px white;
-}
-
-/* Leaderboard */
-#leaderboard {
-  position:absolute;
-  top:50px;
-  left:20px;
-  width:220px;
-  font-family:"Courier New", monospace;
-  font-size:1rem;
-  text-shadow:0 0 5px white,0 0 10px white;
-  display:none;
-}
-
-/* Current user display */
-#currentUser {
-  position: absolute;
-  bottom: 30px;
-  left: 10px;
-  font-family: "Courier New", monospace;
-  font-size: 1rem;
-  color: white;
-  text-shadow: 0 0 10px white, 0 0 20px white;
-}
-
-/* Timer */
-#timer {
-  position:absolute;
-  bottom:10px;
-  left:10px;
-  font-family:"Courier New", monospace;
-  font-size:1rem;
-  color:white;
-  text-shadow:0 0 10px white,0 0 20px white;
-}
-
-/* Store GUI */
-#storeGUI {
-  position: absolute;
-  top: 100px;
-  left: 100px;
-  width: 500px;
-  height: 350px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(15px);
-  border: 2px solid white;
-  border-radius: 10px;
-  box-shadow: 0 0 20px white, 0 0 40px white;
-  display: none;
-  cursor: grab;
-}
-#storeGUI.show {
-  display: block;
-  animation: pulse 2s infinite alternate;
-}
-#storeHeader {
-  font-family: "Courier New", monospace;
-  font-size: 1.2rem;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 5px;
-  border-bottom: 1px solid white;
-  color: white;
-  text-shadow: 0 0 10px white, 0 0 20px white;
-  user-select: none;
-  cursor: grab;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Snow Gradient</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      height: 100vh;
+      background: linear-gradient(to bottom, #1e3c72, #2a5298); /* blue gradient */
+    }
+    canvas {
+      display: block;
+    }
+  </style>
 </head>
 <body>
-<canvas id="stars"></canvas>
+  <canvas id="snow"></canvas>
 
-<div id="centerText">X N 1 O O</div>
-<button id="playButton">PLAY</button>
-<div id="moon"></div>
-<div id="typingBox"></div>
-<div id="leaderboard"></div>
-<div id="currentUser">Your name: </div>
-<div id="timer">Time: 0 min</div>
+  <script>
+    const canvas = document.getElementById("snow");
+    const ctx = canvas.getContext("2d");
 
-<!-- Store GUI -->
-<div id="storeGUI">
-  <div id="storeHeader">Store</div>
-  <div id="storeContent">
-    <div class="section">
-      <div class="sectionHeader" id="perksHeader">Perks ▼</div>
-      <div class="sectionBody" id="perksBody">
-        <button id="quadrupleTimeBtn">4× Time (Cost: 25 min)</button>
-        <button id="doubleTimeBtn">2× Time (Cost: 10 min)</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-<script>
-// ===== FIREBASE CONFIG =====
-const firebaseConfig = {
-  apiKey: "AIzaSyB4CcE_afYUrjwpp_DCaJwUuow478JRfP8",
-  authDomain: "xn1oo-bb64d.firebaseapp.com",
-  databaseURL: "https://xn1oo-bb64d-default-rtdb.firebaseio.com",
-  projectId: "xn1oo-bb64d",
-  storageBucket: "xn1oo-bb64d.firebasestorage.app",
-  messagingSenderId: "767448528500",
-  appId: "1:767448528500:web:6a39c8c16abb037643c321",
-  measurementId: "G-TMZ3FH9WL0"
-};
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-
-// ===== STAR BACKGROUND =====
-const canvas = document.getElementById('stars');
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-let stars=[];
-for(let i=0;i<200;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:Math.random()*2,speed:Math.random()*0.5});}
-function drawStars(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="white";stars.forEach(star=>{ctx.beginPath();ctx.arc(star.x,star.y,star.size,0,Math.PI*2);ctx.fill();star.y+=star.speed;if(star.y>canvas.height){star.y=0;star.x=Math.random()*canvas.width;}});requestAnimationFrame(drawStars);}
-drawStars();
-
-// ===== ELEMENTS =====
-const playButton = document.getElementById("playButton");
-const centerText = document.getElementById("centerText");
-const moon = document.getElementById("moon");
-const typingBox = document.getElementById("typingBox");
-const leaderboard = document.getElementById("leaderboard");
-const currentUserDiv = document.getElementById("currentUser");
-const storeGUI = document.getElementById("storeGUI");
-const storeHeader = document.getElementById("storeHeader");
-
-// ===== TIMER =====
-let minutes = parseInt(localStorage.getItem("xn1ooTime") || "0");
-const timer = document.getElementById("timer");
-timer.textContent = "Time: " + minutes + " min";
-
-setInterval(()=>{
-  minutes++;
-  timer.textContent = "Time: "+minutes+" min";
-  localStorage.setItem("xn1ooTime", minutes);
-  const storedName = localStorage.getItem("xn1ooName");
-  if(storedName){
-    database.ref('users/'+storedName).set({name:storedName,time:minutes});
-  }
-},60000);
-
-// ===== PLAY BUTTON =====
-setTimeout(()=>{playButton.classList.add("show");},2000);
-playButton.addEventListener("click",()=>{
-  playButton.classList.remove("show");
-  playButton.classList.add("fadeOut");
-  centerText.classList.add("moveUp");
-  setTimeout(()=>{
-    moon.style.opacity=1;
-    startNamePrompt();
-  },1200);
-});
-
-// ===== ASK FOR NAME =====
-function startNamePrompt(){
-  typingBox.innerHTML = "What's your name? ";
-  const input = document.createElement("input");
-  input.id="nameInput";
-  typingBox.appendChild(input);
-  input.focus();
-  input.addEventListener("keydown",(e)=>{
-    if(e.key==="Enter" && input.value.trim()!==""){
-      const name=input.value.trim();
-      localStorage.setItem("xn1ooName", name);
-      updateCurrentUserName();
-      typingBox.innerHTML="";
-      showGlobalLeaderboard();
-      database.ref('users/'+name).set({name:name,time:minutes});
+    // resize canvas
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     }
-  });
-}
+    window.addEventListener("resize", resize);
+    resize();
 
-// ===== CURRENT USER DISPLAY =====
-function updateCurrentUserName() {
-  const storedName = localStorage.getItem("xn1ooName");
-  if(storedName){
-    currentUserDiv.textContent = "Your name: " + storedName;
-  }
-}
+    // create snowflakes
+    const snowflakes = [];
+    function createSnowflakes() {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      const radius = Math.random() * 4 + 1; // size
+      const speed = Math.random() * 1 + 0.5; // fall speed
+      return {x, y, radius, speed};
+    }
+    for (let i = 0; i < 200; i++) {
+      snowflakes.push(createSnowflakes());
+    }
 
-// ===== GLOBAL LEADERBOARD =====
-function showGlobalLeaderboard(){
-  leaderboard.style.display="block";  
-  const storedName = localStorage.getItem("xn1ooName");
-  database.ref('users').on('value', (snapshot)=>{
-    const data = snapshot.val();
-    if(!data) return;
-    const sortedUsers = Object.values(data).sort((a,b)=>b.time - a.time);
-    leaderboard.innerHTML = "<strong>Leaderboard:</strong><br>";
-    sortedUsers.forEach((u,i)=>{
-      const entry = document.createElement("div");
-      entry.textContent = `${i+1}. ${u.name}: ${u.time} min`;
-      if(u.name === storedName){
-        entry.style.color = "#00ffff";
-        entry.style.textShadow = "0 0 5px #00ffff,0 0 10px #00ffff";
-        entry.style.fontWeight = "bold";
+    // draw + update
+    function drawSnowflakes() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "white";
+      ctx.beginPath();
+      for (const flake of snowflakes) {
+        ctx.moveTo(flake.x, flake.y);
+        ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
       }
-      leaderboard.appendChild(entry);
-    });
-  });
-}
+      ctx.fill();
+      updateSnowflakes();
+    }
 
-// ===== MOON CLICK TO TOGGLE STORE =====
-moon.addEventListener("click", () => {
-  storeGUI.classList.toggle("show");
-});
+    function updateSnowflakes() {
+      for (const flake of snowflakes) {
+        flake.y += flake.speed;
+        if (flake.y > canvas.height) {
+          flake.y = -flake.radius;
+          flake.x = Math.random() * canvas.width;
+        }
+      }
+    }
 
-// ===== DRAG STORE GUI =====
-let isDragging = false;
-let offsetX = 0;
-let offsetY = 0;
-storeHeader.addEventListener("mousedown", (e) => {
-  isDragging = true;
-  offsetX = e.clientX - storeGUI.offsetLeft;
-  offsetY = e.clientY - storeGUI.offsetTop;
-  storeGUI.style.cursor = "grabbing";
-});
-document.addEventListener("mouseup", () => {
-  isDragging = false;
-  storeGUI.style.cursor = "grab";
-});
-document.addEventListener("mousemove", (e) => {
-  if(isDragging){
-    let x = e.clientX - offsetX;
-    let y = e.clientY - offsetY;
-    x = Math.max(0, Math.min(window.innerWidth - storeGUI.offsetWidth, x));
-    y = Math.max(0, Math.min(window.innerHeight - storeGUI.offsetHeight, y));
-    storeGUI.style.left = x + "px";
-    storeGUI.style.top = y + "px";
-  }
-});
-
-// ===== STORE SECTIONS =====
-const perksHeader = document.getElementById("perksHeader");
-const perksBody = document.getElementById("perksBody");
-perksHeader.addEventListener("click", () => {
-  if(perksBody.style.display === "block") {
-    perksBody.style.display = "none";
-    perksHeader.textContent = "Perks ▼";
-  } else {
-    perksBody.style.display = "block";
-    perksHeader.textContent = "Perks ▲";
-  }
-});
-
-// ===== STORE ITEMS =====
-let timeMultiplier = parseInt(localStorage.getItem("xn1ooMultiplier") || "1");
-const doubleTimeBtn = document.getElementById("doubleTimeBtn");
-
-function updateStoreButtons() {
-  if(timeMultiplier >= 2) {
-    doubleTimeBtn.textContent = "2× Time (Owned)";
-    doubleTimeBtn.disabled = true;
-    doubleTimeBtn.style.opacity = 0.6;
-  }
-}
-updateStoreButtons();
-
-doubleTimeBtn.addEventListener("click", () => {
-  if(minutes >= 10 && timeMultiplier < 2) {
-    minutes -= 10;
-    timeMultiplier = 2;
-    localStorage.setItem("xn1ooTime", minutes);
-    localStorage.setItem("xn1ooMultiplier", timeMultiplier);
-    timer.textContent = "Time: " + minutes + " min";
-    updateStoreButtons();
-    alert("Purchased 2× Time! Your timer will now increase twice as fast.");
-  } else {
-    alert("Not enough minutes!");
-  }
-});
-
-// ===== INIT =====
-window.addEventListener("load", updateCurrentUserName);
-</script>
+    function animate() {
+      drawSnowflakes();
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
 </body>
 </html>
