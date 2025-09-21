@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Snow Gradient</title>
+  <title>Snowfall</title>
   <style>
     body {
       margin: 0;
       overflow: hidden;
       height: 100vh;
-      background: linear-gradient(to bottom, #1e3c72, #2a5298); /* blue gradient */
+      background: black;
     }
     canvas {
       display: block;
@@ -32,15 +32,15 @@
 
     // create snowflakes
     const snowflakes = [];
-    function createSnowflakes() {
+    function createSnowflake() {
       const x = Math.random() * canvas.width;
       const y = Math.random() * canvas.height;
-      const radius = Math.random() * 4 + 1; // size
-      const speed = Math.random() * 1 + 0.5; // fall speed
+      const radius = Math.random() * 2 + 0.5; // smaller particles
+      const speed = Math.random() * 0.8 + 0.2; // gentler fall
       return {x, y, radius, speed};
     }
-    for (let i = 0; i < 200; i++) {
-      snowflakes.push(createSnowflakes());
+    for (let i = 0; i < 250; i++) {
+      snowflakes.push(createSnowflake());
     }
 
     // draw + update
