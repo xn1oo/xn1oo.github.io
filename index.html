@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>X N 1 OO</title>
+<title>X N 1 O O</title>
 <style>
 body {
   margin: 0;
@@ -77,17 +77,8 @@ canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:
 #typingBox {
   margin-top:40px;
   font-size:1.2rem;
-  white-space: pre-line;
   text-shadow:0 0 10px white,0 0 20px white;
 }
-.cursor {
-  display:inline-block;
-  width:10px;
-  background:white;
-  margin-left:2px;
-  animation: blink 1s infinite;
-}
-@keyframes blink { 50% { background: transparent; } }
 
 /* Input for name */
 #nameInput {
@@ -139,26 +130,23 @@ canvas#stars { position: fixed; top:0; left:0; width:100%; height:100%; z-index:
 
 /* Store GUI */
 #storeGUI {
-position: absolute;
+  position: absolute;
   top: 100px;
   left: 100px;
-  width: 500px;   /* wider */
-  height: 350px;  /* taller */
-  background: rgba(255, 255, 255, 0.05); /* very transparent */
-  backdrop-filter: blur(15px); /* frosted glass blur */
+  width: 500px;
+  height: 350px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
   border: 2px solid white;
   border-radius: 10px;
-  box-shadow: 0 0 20px white, 0 0 40px white; /* glow effect */
+  box-shadow: 0 0 20px white, 0 0 40px white;
   display: none;
   cursor: grab;
 }
-
-
 #storeGUI.show {
   display: block;
   animation: pulse 2s infinite alternate;
 }
-
 #storeHeader {
   font-family: "Courier New", monospace;
   font-size: 1.2rem;
@@ -179,7 +167,7 @@ position: absolute;
 <div id="centerText">X N 1 O O</div>
 <button id="playButton">PLAY</button>
 <div id="moon"></div>
-<div id="typingBox"><span id="typedText"></span><span class="cursor"></span></div>
+<div id="typingBox"></div>
 <div id="leaderboard"></div>
 <div id="currentUser">Your name: </div>
 <div id="timer">Time: 0 min</div>
@@ -188,63 +176,15 @@ position: absolute;
 <div id="storeGUI">
   <div id="storeHeader">Store</div>
   <div id="storeContent">
-    <!-- Perks section -->
     <div class="section">
       <div class="sectionHeader" id="perksHeader">Perks ▼</div>
       <div class="sectionBody" id="perksBody">
+        <button id="quadrupleTimeBtn">4× Time (Cost: 25 min)</button>
         <button id="doubleTimeBtn">2× Time (Cost: 10 min)</button>
       </div>
     </div>
   </div>
 </div>
-<style>
-/* your existing CSS here ... */
-
-/* Store sections (new) */
-.section {
-  margin: 10px 0;
-  border: 1px solid white;
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.sectionHeader {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  color: white;
-  user-select: none;
-  text-shadow: 0 0 5px white;
-}
-
-.sectionHeader:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.sectionBody {
-  display: none;
-  padding: 8px;
-}
-
-.sectionBody button {
-  display: block;
-  width: 100%;
-  margin: 5px 0;
-  padding: 8px;
-  border: 1px solid white;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.sectionBody button:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-</style>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -279,7 +219,6 @@ drawStars();
 const playButton = document.getElementById("playButton");
 const centerText = document.getElementById("centerText");
 const moon = document.getElementById("moon");
-const typedText = document.getElementById("typedText");
 const typingBox = document.getElementById("typingBox");
 const leaderboard = document.getElementById("leaderboard");
 const currentUserDiv = document.getElementById("currentUser");
@@ -309,84 +248,13 @@ playButton.addEventListener("click",()=>{
   centerText.classList.add("moveUp");
   setTimeout(()=>{
     moon.style.opacity=1;
-    setTimeout(runCodeTyping,2000);
+    startNamePrompt();
   },1200);
 });
 
-// ===== SLOW TYPING FUNCTION =====
-function typeLine(line, callback, speed=100){
-  let i=0;
-  function typeChar(){
-    if(i<line.length){
-      typedText.textContent+=line.charAt(i);
-      i++;
-      setTimeout(typeChar,speed);
-    } else callback();
-  }
-  typeChar();
-}
-
-// ===== TYPING MESSAGES =====
-// Skip messages and go straight to name prompt
-const messages = [];
-
-let msgIndex=0;
-let partIndex=0;
-
-function runCodeTyping(){
- function runCodeTyping(){
-  if(messages.length === 0){
-    checkName();
-    return;
-  }
-  if(msgIndex < messages.length){
-    const parts = messages[msgIndex];
-    function typeNextPart(){
-      if(partIndex < parts.length){
-        if(typeof parts[partIndex] === "string"){
-          typeLine(parts[partIndex], ()=>{partIndex++; typeNextPart();}, 100);
-        } else if(typeof parts[partIndex] === "number"){
-          setTimeout(()=>{partIndex++; typeNextPart();}, parts[partIndex]);
-        }
-      } else {
-        msgIndex++;
-        partIndex = 0;
-        typedText.textContent += "\n";
-        runCodeTyping();
-      }
-    }
-    typeNextPart();
-  } else {
-    checkName();
-  }
-}
-
-
-// ===== CURRENT USER DISPLAY =====
-function updateCurrentUserName() {
-  const storedName = localStorage.getItem("xn1ooName");
-  if(storedName){
-    currentUserDiv.textContent = "Your name: " + storedName;
-  }
-}
-
-// ===== CHECK NAME =====
-function checkName(){
-  const storedName = localStorage.getItem("xn1ooName");
-  if(storedName){
-    typedText.textContent="";
-    updateCurrentUserName();
-    typeLine("Hello, "+storedName,()=>{
-      setTimeout(()=>{typedText.style.display="none"; showGlobalLeaderboard();},1000);
-    },100);
-  } else {
-    startNamePrompt();
-  }
-}
-
 // ===== ASK FOR NAME =====
 function startNamePrompt(){
-  typedText.textContent="What's your name? ";
+  typingBox.innerHTML = "What's your name? ";
   const input = document.createElement("input");
   input.id="nameInput";
   typingBox.appendChild(input);
@@ -397,12 +265,18 @@ function startNamePrompt(){
       localStorage.setItem("xn1ooName", name);
       updateCurrentUserName();
       typingBox.innerHTML="";
-      typeLine("Hello, "+name,()=>{
-        setTimeout(()=>{typedText.style.display="none"; showGlobalLeaderboard();},1000);
-      },100);
+      showGlobalLeaderboard();
       database.ref('users/'+name).set({name:name,time:minutes});
     }
   });
+}
+
+// ===== CURRENT USER DISPLAY =====
+function updateCurrentUserName() {
+  const storedName = localStorage.getItem("xn1ooName");
+  if(storedName){
+    currentUserDiv.textContent = "Your name: " + storedName;
+  }
 }
 
 // ===== GLOBAL LEADERBOARD =====
@@ -436,19 +310,16 @@ moon.addEventListener("click", () => {
 let isDragging = false;
 let offsetX = 0;
 let offsetY = 0;
-
 storeHeader.addEventListener("mousedown", (e) => {
   isDragging = true;
   offsetX = e.clientX - storeGUI.offsetLeft;
   offsetY = e.clientY - storeGUI.offsetTop;
   storeGUI.style.cursor = "grabbing";
 });
-
 document.addEventListener("mouseup", () => {
   isDragging = false;
   storeGUI.style.cursor = "grab";
 });
-
 document.addEventListener("mousemove", (e) => {
   if(isDragging){
     let x = e.clientX - offsetX;
@@ -463,7 +334,6 @@ document.addEventListener("mousemove", (e) => {
 // ===== STORE SECTIONS =====
 const perksHeader = document.getElementById("perksHeader");
 const perksBody = document.getElementById("perksBody");
-
 perksHeader.addEventListener("click", () => {
   if(perksBody.style.display === "block") {
     perksBody.style.display = "none";
@@ -500,7 +370,6 @@ doubleTimeBtn.addEventListener("click", () => {
     alert("Not enough minutes!");
   }
 });
-
 
 // ===== INIT =====
 window.addEventListener("load", updateCurrentUserName);
