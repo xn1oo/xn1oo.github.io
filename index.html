@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Snow + Light Rain</title>
+  <title>Glowing Snow + Rain</title>
   <style>
     body {
       margin: 0;
@@ -16,127 +16,137 @@
   </style>
 </head>
 <body>
-  <canvas id="snow"></canvas>
+<canvas id="snow"></canvas>
 
-  <script>
-    const canvas = document.getElementById("snow");
-    const ctx = canvas.getContext("2d");
+<script>
+const canvas = document.getElementById("snow");
+const ctx = canvas.getContext("2d");
 
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+resize();
+
+// --- Snowflakes ---
+const snowflakes = [];
+function createSnowflake() {
+  return {
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    radius: Math.random() * 0.8 + 0.2,
+    speed: Math.random() * 0.7 + 0.3,
+    drift: Math.random() * 0.6 - 0.3,
+    glow: Math.random() * 1
+  };
+}
+for (let i = 0; i < 250; i++) snowflakes.push(createSnowflake());
+
+// --- Tiny drifting snow ---
+const tinySnow = [];
+function createTinySnow() {
+  return {
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    radius: Math.random() * 0.3 + 0.05,
+    speed: Math.random() * 0.4 + 0.2,
+    drift: -0.6,
+    glow: Math.random() * 1
+  };
+}
+for (let i = 0; i < 120; i++) tinySnow.push(createTinySnow());
+
+// --- Light rain ---
+const rain = [];
+function createRainDrop() {
+  return {
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    length: Math.random() * 3 + 1.5,
+    speed: Math.random() * 1.5 + 1.5,
+    glow: Math.random() * 0.5 + 0.2
+  };
+}
+for (let i = 0; i < 80; i++) rain.push(createRainDrop());
+
+// --- Draw + Update ---
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Snow glow
+  for (const flake of snowflakes) {
+    const glow = 2 + Math.sin(Date.now() * 0.005 + flake.glow) * 2; // pulsate
+    ctx.fillStyle = "white";
+    ctx.shadowBlur = glow;
+    ctx.shadowColor = "white";
+    ctx.beginPath();
+    ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  for (const flake of tinySnow) {
+    const glow = 1 + Math.sin(Date.now() * 0.005 + flake.glow) * 1;
+    ctx.fillStyle = "white";
+    ctx.shadowBlur = glow;
+    ctx.shadowColor = "white";
+    ctx.beginPath();
+    ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Rain glow
+  for (const drop of rain) {
+    const glow = drop.glow * (1 + Math.sin(Date.now() * 0.01));
+    ctx.strokeStyle = "rgba(200,200,255,0.6)";
+    ctx.shadowBlur = glow * 2;
+    ctx.shadowColor = "white";
+    ctx.lineWidth = 0.3;
+    ctx.beginPath();
+    ctx.moveTo(drop.x, drop.y);
+    ctx.lineTo(drop.x, drop.y + drop.length);
+    ctx.stroke();
+  }
+
+  update();
+}
+
+function update() {
+  // snow
+  for (const flake of snowflakes) {
+    flake.y += flake.speed;
+    flake.x += flake.drift * 0.3;
+    if (flake.y > canvas.height) {
+      flake.y = -flake.radius;
+      flake.x = Math.random() * canvas.width;
     }
-    window.addEventListener("resize", resize);
-    resize();
+  }
 
-    // --- Snowflakes (smaller) ---
-    const snowflakes = [];
-    function createSnowflake() {
-      return {
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: Math.random() * 1 + 0.5, // smaller radius
-        speed: Math.random() * 0.8 + 0.3,
-        drift: Math.random() * 1 - 0.5
-      };
+  // tiny snow
+  for (const flake of tinySnow) {
+    flake.y += flake.speed;
+    flake.x += flake.drift;
+    if (flake.y > canvas.height || flake.x < 0) {
+      flake.y = -flake.radius;
+      flake.x = canvas.width + Math.random() * 50;
     }
-    for (let i = 0; i < 250; i++) snowflakes.push(createSnowflake());
+  }
 
-    // --- Tiny diagonal snow (even smaller) ---
-    const tinySnow = [];
-    function createTinySnow() {
-      return {
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: Math.random() * 0.4 + 0.1, // really tiny
-        speed: Math.random() * 0.5 + 0.2,
-        drift: -0.7
-      };
+  // rain
+  for (const drop of rain) {
+    drop.y += drop.speed;
+    if (drop.y > canvas.height) {
+      drop.y = -drop.length;
+      drop.x = Math.random() * canvas.width;
     }
-    for (let i = 0; i < 120; i++) tinySnow.push(createTinySnow());
+  }
+}
 
-    // --- Light rain ---
-    const rain = [];
-    function createRainDrop() {
-      return {
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        length: Math.random() * 4 + 2, // short streak
-        speed: Math.random() * 2 + 2
-      };
-    }
-    for (let i = 0; i < 80; i++) rain.push(createRainDrop());
-
-    // --- Draw + Update ---
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // main snow
-      ctx.fillStyle = "white";
-      ctx.beginPath();
-      for (const flake of snowflakes) {
-        ctx.moveTo(flake.x, flake.y);
-        ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
-      }
-      ctx.fill();
-
-      // tiny drifting snow
-      ctx.beginPath();
-      for (const flake of tinySnow) {
-        ctx.moveTo(flake.x, flake.y);
-        ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
-      }
-      ctx.fill();
-
-      // rain
-      ctx.strokeStyle = "rgba(200,200,255,0.6)";
-      ctx.lineWidth = 0.5;
-      ctx.beginPath();
-      for (const drop of rain) {
-        ctx.moveTo(drop.x, drop.y);
-        ctx.lineTo(drop.x, drop.y + drop.length);
-      }
-      ctx.stroke();
-
-      update();
-    }
-
-    function update() {
-      // snow
-      for (const flake of snowflakes) {
-        flake.y += flake.speed;
-        flake.x += flake.drift * 0.3;
-        if (flake.y > canvas.height) {
-          flake.y = -flake.radius;
-          flake.x = Math.random() * canvas.width;
-        }
-      }
-
-      // tiny snow
-      for (const flake of tinySnow) {
-        flake.y += flake.speed;
-        flake.x += flake.drift;
-        if (flake.y > canvas.height || flake.x < 0) {
-          flake.y = -flake.radius;
-          flake.x = canvas.width + Math.random() * 50;
-        }
-      }
-
-      // rain
-      for (const drop of rain) {
-        drop.y += drop.speed;
-        if (drop.y > canvas.height) {
-          drop.y = -drop.length;
-          drop.x = Math.random() * canvas.width;
-        }
-      }
-    }
-
-    function animate() {
-      draw();
-      requestAnimationFrame(animate);
-    }
-    animate();
-  </script>
+function animate() {
+  draw();
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
 </body>
 </html>
