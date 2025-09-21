@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Realistic Snow + Rain</title>
+  <title>Snow + Light Rain</title>
   <style>
     body {
       margin: 0;
@@ -37,7 +37,7 @@
         y: Math.random() * canvas.height,
         radius: Math.random() * 2 + 1,
         speed: Math.random() * 1 + 0.5,
-        drift: Math.random() * 1 - 0.5 // side drift
+        drift: Math.random() * 1 - 0.5
       };
     }
     for (let i = 0; i < 200; i++) snowflakes.push(createSnowflake());
@@ -50,19 +50,19 @@
         y: Math.random() * canvas.height,
         radius: Math.random() * 0.8 + 0.2,
         speed: Math.random() * 0.6 + 0.2,
-        drift: -0.8 // always drifting left
+        drift: -0.8
       };
     }
     for (let i = 0; i < 100; i++) tinySnow.push(createTinySnow());
 
-    // --- Rain streaks ---
+    // --- Light rain ---
     const rain = [];
     function createRainDrop() {
       return {
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        length: Math.random() * 8 + 5,
-        speed: Math.random() * 3 + 3
+        length: Math.random() * 4 + 2, // shorter
+        speed: Math.random() * 2 + 2   // softer fall
       };
     }
     for (let i = 0; i < 80; i++) rain.push(createRainDrop());
@@ -88,9 +88,9 @@
       }
       ctx.fill();
 
-      // rain
-      ctx.strokeStyle = "rgba(200,200,255,0.7)";
-      ctx.lineWidth = 1;
+      // rain (thin streaks)
+      ctx.strokeStyle = "rgba(200,200,255,0.6)";
+      ctx.lineWidth = 0.5; // thinner
       ctx.beginPath();
       for (const drop of rain) {
         ctx.moveTo(drop.x, drop.y);
