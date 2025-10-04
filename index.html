@@ -1,321 +1,134 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>YOUR_SITE_NAME — private gallery</title>
-  <style>
-    :root{
-      --bg:#0f1724;
-      --card:#0b1220;
-      --muted:#9aa4b2;
-      --accent:#7c5cff;
-      --glass: rgba(255,255,255,0.03);
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    }
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071022 0%, #0b1630 100%);color:#e6eef8}
-    .wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:48px 20px 80px;box-sizing:border-box}
-    header{max-width:980px;width:100%;margin-bottom:28px;text-align:center}
-    h1{margin:0 0 6px;font-size:22px;letter-spacing:0.2px}
-    p.lead{margin:0;color:var(--muted);font-size:14px}
-    .auth{
-      margin:18px 0 28px;
-      background:var(--glass);
-      border-radius:12px;
-      padding:18px;
-      display:flex;
-      gap:8px;
-      align-items:center;
-      max-width:480px;
-      width:100%;
-      box-shadow:0 6px 18px rgba(12,18,30,0.6);
-    }
-    .auth input{
-      flex:1;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);
-      background:transparent;color:inherit;font-size:15px;outline:none;
-    }
-    .auth button{
-      background:linear-gradient(180deg,var(--accent),#5e46d9);
-      border:none;color:white;padding:10px 14px;border-radius:8px;font-weight:600;cursor:pointer;
-      box-shadow:0 6px 12px rgba(92,70,217,0.18);
-    }
-    .msg{color:var(--muted);font-size:13px;margin-top:8px}
-    .gallery{
-      display:none;
-      margin-top:18px;
-      width:100%;
-      max-width:980px;
-      gap:18px;
-      box-sizing:border-box;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:18px;
-    }
-    .tile{
-      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-radius:12px;
-      padding:10px;
-      box-sizing:border-box;
-      text-align:center;
-      box-shadow:0 6px 18px rgba(2,6,23,0.6);
-      min-height:160px;
-      display:flex;
-      flex-direction:column;
-      justify-content:flex-start;
-      align-items:center;
-    }
-    .tile img{
-      width:100%;
-      height:120px;
-      object-fit:cover;
-      border-radius:8px;
-      display:block;
-      margin-bottom:10px;
-      background:linear-gradient(90deg,#091225,#0c1530);
-    }
-    .download-btn{
-      margin-top:auto;
-      width:100%;
-      display:inline-flex;
-      justify-content:center;
-      gap:8px;
-    }
-    .download-btn button{
-      width:100%;
-      padding:8px 10px;border-radius:8px;border:none;background:#0d1a2a;color:#e7f0ff;font-weight:600;cursor:pointer;
-    }
-    footer{margin-top:28px;color:var(--muted);font-size:13px}
-    /* responsive */
-    @media (max-width:980px){
-      .grid{grid-template-columns:repeat(3,1fr)}
-    }
-    @media (max-width:700px){
-      .grid{grid-template-columns:repeat(2,1fr)}
-      .auth{flex-direction:column;align-items:stretch}
-      .auth button{width:100%}
-    }
-    @media (max-width:420px){
-      .grid{grid-template-columns:repeat(1,1fr)}
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple 4x4 Gallery</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: #0f1724;
+    color: #e6eef8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+  }
+
+  h1 {
+    margin-bottom: 20px;
+    font-size: 24px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 980px;
+    width: 100%;
+  }
+
+  .tile {
+    background: #0b1220;
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .tile img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+
+  .download-btn button {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: none;
+    background: #5e46d9;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  @media (max-width:980px){
+    .grid{grid-template-columns: repeat(3,1fr);}
+  }
+  @media (max-width:700px){
+    .grid{grid-template-columns: repeat(2,1fr);}
+  }
+  @media (max-width:420px){
+    .grid{grid-template-columns: repeat(1,1fr);}
+  }
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>YOUR_SITE_NAME — private gallery</h1>
-      <p class="lead">Enter the access code to view and download the images.</p>
-    </header>
 
-    <div class="auth" id="authPanel" aria-live="polite">
-      <input id="siteCode" type="password" placeholder="Enter access code" autocomplete="off" />
-      <button id="unlockBtn">Unlock</button>
+<h1>4x4 Image Gallery</h1>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const IMAGES = [
+  'https://picsum.photos/id/1015/800/600',
+  'https://picsum.photos/id/1025/800/600',
+  'https://picsum.photos/id/1003/800/600',
+  'https://picsum.photos/id/1005/800/600',
+  'https://picsum.photos/id/1000/800/600',
+  'https://picsum.photos/id/1011/800/600',
+  'https://picsum.photos/id/1018/800/600',
+  'https://picsum.photos/id/1020/800/600',
+  'https://picsum.photos/id/1024/800/600',
+  'https://picsum.photos/id/1027/800/600',
+  'https://picsum.photos/id/1035/800/600',
+  'https://picsum.photos/id/1033/800/600',
+  'https://picsum.photos/id/1040/800/600',
+  'https://picsum.photos/id/1043/800/600',
+  'https://picsum.photos/id/1050/800/600',
+  'https://picsum.photos/id/1062/800/600'
+];
+
+const grid = document.getElementById('grid');
+
+IMAGES.forEach((src, i) => {
+  const tile = document.createElement('div');
+  tile.className = 'tile';
+  tile.innerHTML = `
+    <img src="${src}" alt="Image ${i+1}" loading="lazy" />
+    <div class="download-btn">
+      <button onclick="downloadImage('${src}', 'img_${i+1}.jpg')">Download Image</button>
     </div>
-    <div class="msg" id="message">Tip: This is client-side protection only — not for sensitive content.</div>
+  `;
+  grid.appendChild(tile);
+});
 
-    <main class="gallery" id="gallery">
-      <section class="grid" id="grid"></section>
-      <footer>
-        <div style="margin-top:12px;color:var(--muted)">If an image fails to download, open it in a new tab and save manually.</div>
-      </footer>
-    </main>
-  </div>
+async function downloadImage(url, filename){
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(blobUrl);
+  } catch(e){
+    console.error('Download failed', e);
+    window.open(url, '_blank');
+  }
+}
+</script>
 
-  <script>
-    /********************************************************
-     * ENCRYPTED URLS (base64 of XOR ciphertexts)
-     * These were generated with the passphrase "letmein123".
-     * To change the passphrase you must re-encrypt your URLs
-     * using the same XOR approach (I can provide a small
-     * script if you want).
-     ********************************************************/
-    const ENCRYPTED_URLS = [
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRD/nWUGSrIYQa3w==",
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDPnWUGSrIYQa3w==",
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDv/WUGSrIYQa3w==",
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDvnWUGSrIYQa3w==",
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDvzWUGSrIYQa3w==",
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRD/3WUGSrIYQa3w==",
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRD/TWUGSrIYQa3w==",
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDPzWUGSrIYQa3w==",
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDPjWUGSrIYQa3w==",
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDPvWUGSrIYQa3w==",
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDfnWUGSrIYQa3w==",
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDf/WUGSrIYQa3w==",
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRCvzWUGSrIYQa3w==",
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRCv/WUGSrIYQa3w==",
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRC/zWUGSrIYQa3w==",
-"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRCP7WUGSrIYQa3w=="
-    ];
-
-    /********************************************************
-     * Utility: base64 -> Uint8Array
-     ********************************************************/
-    function b64ToBytes(b64){
-      const bin = atob(b64);
-      const len = bin.length;
-      const bytes = new Uint8Array(len);
-      for(let i=0;i<len;i++) bytes[i] = bin.charCodeAt(i);
-      return bytes;
-    }
-    function bytesToStr(bytes){
-      const dec = new TextDecoder();
-      return dec.decode(bytes);
-    }
-
-    /********************************************************
-     * Derive key bytes from passphrase using SHA-256.
-     * We use those 32 bytes as the repeating XOR key.
-     ********************************************************/
-    async function keyFromPass(pass){
-      const enc = new TextEncoder();
-      const data = enc.encode(pass);
-      const hash = await crypto.subtle.digest('SHA-256', data);
-      return new Uint8Array(hash); // 32 bytes
-    }
-
-    /********************************************************
-     * XOR decrypt (cipherBytes XOR keyBytes repeating)
-     ********************************************************/
-    function xorDecryptBytes(cipherBytes, keyBytes){
-      const out = new Uint8Array(cipherBytes.length);
-      for(let i=0;i<cipherBytes.length;i++){
-        out[i] = cipherBytes[i] ^ keyBytes[i % keyBytes.length];
-      }
-      return out;
-    }
-
-    /********************************************************
-     * Try decrypting first ciphertext to verify passphrase.
-     * If successful, decrypt all and render.
-     ********************************************************/
-    const siteName = 'YOUR_SITE_NAME';
-    // keep references to UI elements
-    const siteCodeInput = document.getElementById('siteCode');
-    const unlockBtn = document.getElementById('unlockBtn');
-    const gallery = document.getElementById('gallery');
-    const grid = document.getElementById('grid');
-    const message = document.getElementById('message');
-    const authPanel = document.getElementById('authPanel');
-
-    unlockBtn.addEventListener('click', onUnlock);
-    siteCodeInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') onUnlock(); });
-    siteCodeInput.focus();
-
-    async function onUnlock(){
-      const pass = siteCodeInput.value;
-      if(!pass){ showMsg('Enter the code first.'); return; }
-
-      showMsg('Checking code...');
-      try {
-        const keyBytes = await keyFromPass(pass);
-        // try decrypt first URL and check structure
-        const first = b64ToBytes(ENCRYPTED_URLS[0]);
-        const decFirst = xorDecryptBytes(first, keyBytes);
-        const s = bytesToStr(decFirst);
-        if(!s.startsWith('http')){
-          // likely wrong passphrase
-          showMsg('Wrong code — try again.');
-          siteCodeInput.value = '';
-          siteCodeInput.focus();
-          return;
-        }
-
-        // pass ok — decrypt all
-        const urls = ENCRYPTED_URLS.map(b64 => {
-          const cb = b64ToBytes(b64);
-          const pb = xorDecryptBytes(cb, keyBytes);
-          return bytesToStr(pb);
-        });
-
-        // render
-        renderGridWithUrls(urls);
-        authPanel.style.display = 'none';
-        gallery.style.display = 'block';
-        showMsg('Unlocked.');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } catch (err) {
-        console.error(err);
-        showMsg('Error during decryption.');
-      }
-    }
-
-    function showMsg(txt){
-      message.textContent = txt;
-      message.style.color = '#d6e3ff';
-      setTimeout(()=>{ message.style.color = ''; }, 2200);
-    }
-
-    /********************************************************
-     * renderGridWithUrls: same behavior as before
-     ********************************************************/
-    function renderGridWithUrls(urls){
-      grid.innerHTML = '';
-      const items = ensureCount(urls, 16);
-      items.forEach((src, i) => {
-        const tile = document.createElement('div');
-        tile.className = 'tile';
-        tile.innerHTML = `
-          <img alt="Image ${i+1}" src="${src}" loading="lazy" />
-          <div style="width:100%;display:flex;gap:8px" class="download-btn">
-            <button data-src="${src}" data-index="${i}">Download Image</button>
-          </div>
-        `;
-        grid.appendChild(tile);
-      });
-
-      // attach download handlers
-      grid.querySelectorAll('button[data-src]').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          const src = btn.getAttribute('data-src');
-          const idx = btn.getAttribute('data-index') || '0';
-          btn.disabled = true;
-          btn.textContent = 'Downloading…';
-          try {
-            await downloadImage(src, `${siteName.replace(/\s+/g,'_')}_img_${Number(idx)+1}.jpg`);
-            btn.textContent = 'Downloaded';
-          } catch (err) {
-            console.error(err);
-            btn.textContent = 'Failed — open image';
-            setTimeout(()=>window.open(src,'_blank'), 250);
-          } finally {
-            setTimeout(()=>{ btn.disabled = false; btn.textContent = 'Download Image'; }, 1400);
-          }
-        });
-      });
-    }
-
-    // ensure array has exactly count elements (repeat if shorter)
-    function ensureCount(arr, count){
-      if(arr.length >= count) return arr.slice(0, count);
-      const out = [];
-      while(out.length < count){
-        out.push(...arr);
-      }
-      return out.slice(0, count);
-    }
-
-    // Download via fetch -> blob (works better cross-browser than forcing <a download> on remote imgs)
-    async function downloadImage(url, filename){
-      const res = await fetch(url, { mode: 'cors' });
-      if(!res.ok) throw new Error('Network error');
-      const blob = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(blobUrl);
-    }
-
-    // optional: expose a simple "logout" via URL fragment (e.g., #lock)
-    if(location.hash === '#lock'){
-      authPanel.style.display = '';
-      gallery.style.display = 'none';
-    }
-  </script>
 </body>
 </html>
