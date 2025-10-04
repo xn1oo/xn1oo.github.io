@@ -124,35 +124,74 @@
 
   <script>
     /********************************************************
-     * CONFIG — change these:
+     * ENCRYPTED URLS (base64 of XOR ciphertexts)
+     * These were generated with the passphrase "letmein123".
+     * To change the passphrase you must re-encrypt your URLs
+     * using the same XOR approach (I can provide a small
+     * script if you want).
      ********************************************************/
-    const SITE_CODE = 'letmein123'; // <-- change this to the code you want
-    const SITE_NAME = 'YOUR_SITE_NAME'; // displayed title
-    // 16 image URLs to show (replace with your own). Keep at least 16 for 4x4.
-    const IMAGES = [
-      'https://picsum.photos/id/1015/800/600',
-      'https://picsum.photos/id/1025/800/600',
-      'https://picsum.photos/id/1003/800/600',
-      'https://picsum.photos/id/1005/800/600',
-      'https://picsum.photos/id/1000/800/600',
-      'https://picsum.photos/id/1011/800/600',
-      'https://picsum.photos/id/1018/800/600',
-      'https://picsum.photos/id/1020/800/600',
-      'https://picsum.photos/id/1024/800/600',
-      'https://picsum.photos/id/1027/800/600',
-      'https://picsum.photos/id/1035/800/600',
-      'https://picsum.photos/id/1033/800/600',
-      'https://picsum.photos/id/1040/800/600',
-      'https://picsum.photos/id/1043/800/600',
-      'https://picsum.photos/id/1050/800/600',
-      'https://picsum.photos/id/1062/800/600'
+    const ENCRYPTED_URLS = [
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRD/nWUGSrIYQa3w==",
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDPnWUGSrIYQa3w==",
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDv/WUGSrIYQa3w==",
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDvnWUGSrIYQa3w==",
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDvzWUGSrIYQa3w==",
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRD/3WUGSrIYQa3w==",
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRD/TWUGSrIYQa3w==",
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDPzWUGSrIYQa3w==",
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDPjWUGSrIYQa3w==",
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDPvWUGSrIYQa3w==",
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDfnWUGSrIYQa3w==",
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRDf/WUGSrIYQa3w==",
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRCvzWUGSrIYQa3w==",
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRCv/WUGSrIYQa3w==",
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRC/zWUGSrIYQa3w==",
+"83rGWpyzfkIf3dBvum2kGMOPpWVM6W9VTLhRCP7WUGSrIYQa3w=="
     ];
-    /********************************************************/
 
-    // set title from config
-    document.title = SITE_NAME + ' — private gallery';
-    document.querySelector('h1').textContent = SITE_NAME + ' — private gallery';
+    /********************************************************
+     * Utility: base64 -> Uint8Array
+     ********************************************************/
+    function b64ToBytes(b64){
+      const bin = atob(b64);
+      const len = bin.length;
+      const bytes = new Uint8Array(len);
+      for(let i=0;i<len;i++) bytes[i] = bin.charCodeAt(i);
+      return bytes;
+    }
+    function bytesToStr(bytes){
+      const dec = new TextDecoder();
+      return dec.decode(bytes);
+    }
 
+    /********************************************************
+     * Derive key bytes from passphrase using SHA-256.
+     * We use those 32 bytes as the repeating XOR key.
+     ********************************************************/
+    async function keyFromPass(pass){
+      const enc = new TextEncoder();
+      const data = enc.encode(pass);
+      const hash = await crypto.subtle.digest('SHA-256', data);
+      return new Uint8Array(hash); // 32 bytes
+    }
+
+    /********************************************************
+     * XOR decrypt (cipherBytes XOR keyBytes repeating)
+     ********************************************************/
+    function xorDecryptBytes(cipherBytes, keyBytes){
+      const out = new Uint8Array(cipherBytes.length);
+      for(let i=0;i<cipherBytes.length;i++){
+        out[i] = cipherBytes[i] ^ keyBytes[i % keyBytes.length];
+      }
+      return out;
+    }
+
+    /********************************************************
+     * Try decrypting first ciphertext to verify passphrase.
+     * If successful, decrypt all and render.
+     ********************************************************/
+    const siteName = 'YOUR_SITE_NAME';
+    // keep references to UI elements
     const siteCodeInput = document.getElementById('siteCode');
     const unlockBtn = document.getElementById('unlockBtn');
     const gallery = document.getElementById('gallery');
@@ -160,46 +199,60 @@
     const message = document.getElementById('message');
     const authPanel = document.getElementById('authPanel');
 
-    unlockBtn.addEventListener('click', tryCode);
-    siteCodeInput.addEventListener('keydown', (e) => {
-      if(e.key === 'Enter') tryCode();
-    });
+    unlockBtn.addEventListener('click', onUnlock);
+    siteCodeInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') onUnlock(); });
+    siteCodeInput.focus();
 
-    function tryCode(){
-      const val = siteCodeInput.value.trim();
-      if(!val){
-        showMsg('Enter the code first.');
-        return;
-      }
-      if(val === SITE_CODE){
-        showGallery();
-      } else {
-        showMsg('Wrong code — try again.');
-        siteCodeInput.value = '';
-        siteCodeInput.focus();
+    async function onUnlock(){
+      const pass = siteCodeInput.value;
+      if(!pass){ showMsg('Enter the code first.'); return; }
+
+      showMsg('Checking code...');
+      try {
+        const keyBytes = await keyFromPass(pass);
+        // try decrypt first URL and check structure
+        const first = b64ToBytes(ENCRYPTED_URLS[0]);
+        const decFirst = xorDecryptBytes(first, keyBytes);
+        const s = bytesToStr(decFirst);
+        if(!s.startsWith('http')){
+          // likely wrong passphrase
+          showMsg('Wrong code — try again.');
+          siteCodeInput.value = '';
+          siteCodeInput.focus();
+          return;
+        }
+
+        // pass ok — decrypt all
+        const urls = ENCRYPTED_URLS.map(b64 => {
+          const cb = b64ToBytes(b64);
+          const pb = xorDecryptBytes(cb, keyBytes);
+          return bytesToStr(pb);
+        });
+
+        // render
+        renderGridWithUrls(urls);
+        authPanel.style.display = 'none';
+        gallery.style.display = 'block';
+        showMsg('Unlocked.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        console.error(err);
+        showMsg('Error during decryption.');
       }
     }
 
     function showMsg(txt){
       message.textContent = txt;
       message.style.color = '#d6e3ff';
-      setTimeout(() => {
-        message.style.color = '';
-      }, 2200);
+      setTimeout(()=>{ message.style.color = ''; }, 2200);
     }
 
-    function showGallery(){
-      // hide auth & reveal grid
-      authPanel.style.display = 'none';
-      gallery.style.display = 'block';
-      renderGrid();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function renderGrid(){
+    /********************************************************
+     * renderGridWithUrls: same behavior as before
+     ********************************************************/
+    function renderGridWithUrls(urls){
       grid.innerHTML = '';
-      // ensure exactly 16 items by slicing/repeating if needed
-      const items = ensureCount(IMAGES, 16);
+      const items = ensureCount(urls, 16);
       items.forEach((src, i) => {
         const tile = document.createElement('div');
         tile.className = 'tile';
@@ -220,12 +273,11 @@
           btn.disabled = true;
           btn.textContent = 'Downloading…';
           try {
-            await downloadImage(src, `${SITE_NAME.replace(/\s+/g,'_')}_img_${Number(idx)+1}.jpg`);
+            await downloadImage(src, `${siteName.replace(/\s+/g,'_')}_img_${Number(idx)+1}.jpg`);
             btn.textContent = 'Downloaded';
           } catch (err) {
             console.error(err);
             btn.textContent = 'Failed — open image';
-            // fallback: open image in new tab
             setTimeout(()=>window.open(src,'_blank'), 250);
           } finally {
             setTimeout(()=>{ btn.disabled = false; btn.textContent = 'Download Image'; }, 1400);
@@ -264,9 +316,6 @@
       authPanel.style.display = '';
       gallery.style.display = 'none';
     }
-
-    // small UX nicety: focus input on load
-    siteCodeInput.focus();
   </script>
 </body>
 </html>
