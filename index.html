@@ -1,267 +1,255 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>YOUR_SITE_NAME — private gallery</title>
-  <style>
-    :root{
-      --bg:#0f1724;
-      --card:#0b1220;
-      --muted:#9aa4b2;
-      --accent:#7c5cff;
-      --glass: rgba(255,255,255,0.03);
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    }
-    html,body{
-      height:100%;
-      margin:0;
-      color:#e6eef8;
-      background:black;
-      overflow-x:hidden;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>(yourname).github.io</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    background: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 
-    /* video + overlay + canvas (snow) */
-    #bgVideo {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      object-fit: cover;
-      z-index: -3;
-    }
-    #overlay {
-      position: fixed;
-      top:0; left:0;
-      width:100vw; height:100vh;
-      background: rgba(0,0,0,0.3);
-      z-index:-2;
-    }
-    #snow {
-      position: fixed;
-      top:0; left:0;
-      width:100vw; height:100vh;
-      z-index:-1;
-      pointer-events:none;
-    }
+  /* Background layers */
+  #overlay {
+    position: fixed;
+    top:0;
+    left:0;
+    width:100vw;
+    height:100vh;
+    background: rgba(0,0,0,0.3);
+    z-index: -1;
+  }
+  #snow {
+    position: fixed;
+    top:0;
+    left:0;
+    z-index: -2;
+  }
 
-    .wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:48px 20px 80px;box-sizing:border-box}
-    header{max-width:980px;width:100%;margin-bottom:28px;text-align:center}
-    h1{margin:0 0 6px;font-size:22px;letter-spacing:0.2px}
-    p.lead{margin:0;color:var(--muted);font-size:14px}
-    .auth{
-      margin:18px 0 28px;
-      background:var(--glass);
-      border-radius:12px;
-      padding:18px;
-      display:flex;
-      gap:8px;
-      align-items:center;
-      max-width:480px;
-      width:100%;
-      box-shadow:0 6px 18px rgba(12,18,30,0.6);
-    }
-    .auth input{
-      flex:1;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);
-      background:transparent;color:inherit;font-size:15px;outline:none;
-    }
-    .auth button{
-      background:linear-gradient(180deg,var(--accent),#5e46d9);
-      border:none;color:white;padding:10px 14px;border-radius:8px;font-weight:600;cursor:pointer;
-      box-shadow:0 6px 12px rgba(92,70,217,0.18);
-    }
-    .msg{color:var(--muted);font-size:13px;margin-top:8px}
-    .gallery{
-      display:none;
-      margin-top:18px;
-      width:100%;
-      max-width:980px;
-      gap:18px;
-      box-sizing:border-box;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:18px;
-    }
-    .tile{
-      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-radius:12px;
-      padding:10px;
-      box-sizing:border-box;
-      text-align:center;
-      box-shadow:0 6px 18px rgba(2,6,23,0.6);
-      min-height:160px;
-      display:flex;
-      flex-direction:column;
-      justify-content:flex-start;
-      align-items:center;
-    }
-    .tile img{
-      width:100%;
-      height:120px;
-      object-fit:cover;
-      border-radius:8px;
-      display:block;
-      margin-bottom:10px;
-      background:linear-gradient(90deg,#091225,#0c1530);
-    }
-    .download-btn{
-      margin-top:auto;
-      width:100%;
-      display:inline-flex;
-      justify-content:center;
-      gap:8px;
-    }
-    .download-btn button{
-      width:100%;
-      padding:8px 10px;border-radius:8px;border:none;background:#0d1a2a;color:#e7f0ff;font-weight:600;cursor:pointer;
-    }
-    footer{margin-top:28px;color:var(--muted);font-size:13px}
-    @media (max-width:980px){.grid{grid-template-columns:repeat(3,1fr)}}
-    @media (max-width:700px){
-      .grid{grid-template-columns:repeat(2,1fr)}
-      .auth{flex-direction:column;align-items:stretch}
-      .auth button{width:100%}
-    }
-    @media (max-width:420px){.grid{grid-template-columns:repeat(1,1fr)}}
-  </style>
+  /* Login screen */
+  .login-container {
+    text-align: center;
+    background: rgba(0,0,0,0.6);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(255,255,255,0.3);
+  }
+
+  input[type="password"] {
+    padding: 10px;
+    border: none;
+    outline: none;
+    border-radius: 6px;
+    width: 200px;
+  }
+
+  button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    border: none;
+    background: purple;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: rgb(180, 0, 180);
+  }
+
+  /* Gallery grid */
+  .gallery {
+    display: none;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    gap: 20px;
+    width: 100vw;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .image-box {
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(255,255,255,0.2);
+    padding: 10px;
+    text-align: center;
+    width: calc(25% - 40px);
+    min-width: 180px;
+  }
+
+  .image-box img {
+    width: 100%;
+    border-radius: 10px;
+  }
+
+  .download-btn {
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: purple;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .download-btn:hover {
+    background: rgb(180, 0, 180);
+  }
+</style>
 </head>
 <body>
 
-<!-- background layers -->
-<video id="bgVideo" autoplay muted loop playsinline>
-  <source src="your-video.mp4" type="video/mp4">
-</video>
 <div id="overlay"></div>
 <canvas id="snow"></canvas>
 
-<!-- main content -->
-<div class="wrap">
-  <header>
-    <h1>YOUR_SITE_NAME — private gallery</h1>
-    <p class="lead">Enter the access code to view and download the images.</p>
-  </header>
+<!-- Login -->
+<div class="login-container" id="loginScreen">
+  <h2>Enter Access Code</h2>
+  <input type="password" id="accessCode" placeholder="Enter code">
+  <br>
+  <button onclick="checkCode()">Enter</button>
+</div>
 
-  <div class="auth" id="authPanel" aria-live="polite">
-    <input id="siteCode" type="password" placeholder="Enter access code" autocomplete="off" />
-    <button id="unlockBtn">Unlock</button>
-  </div>
-  <div class="msg" id="message">Tip: This is client-side protection only — not for sensitive content.</div>
-
-  <main class="gallery" id="gallery">
-    <section class="grid" id="grid"></section>
-    <footer>
-      <div style="margin-top:12px;color:var(--muted)">
-        If an image fails to download, open it in a new tab and save manually.
-      </div>
-    </footer>
-  </main>
+<!-- Gallery -->
+<div class="gallery" id="gallery">
+  <!-- Example images (replace with your own URLs) -->
+  <div class="image-box"><img src="https://placekitten.com/300/200"><button class="download-btn" onclick="downloadImage('https://placekitten.com/300/200')">Download</button></div>
+  <div class="image-box"><img src="https://placekitten.com/301/200"><button class="download-btn" onclick="downloadImage('https://placekitten.com/301/200')">Download</button></div>
+  <div class="image-box"><img src="https://placekitten.com/302/200"><button class="download-btn" onclick="downloadImage('https://placekitten.com/302/200')">Download</button></div>
+  <div class="image-box"><img src="https://placekitten.com/303/200"><button class="download-btn" onclick="downloadImage('https://placekitten.com/303/200')">Download</button></div>
+  <div class="image-box"><img src="https://placekitten.com/304/200"><button class="download-btn" onclick="downloadImage('https://placekitten.com/304/200')">Download</button></div>
 </div>
 
 <script>
-/******************* CONFIG ********************/
-const SITE_CODE = 'letmein123';
-const SITE_NAME = 'YOUR_SITE_NAME';
-const IMAGES = [
-  'https://picsum.photos/id/1015/800/600',
-  'https://picsum.photos/id/1025/800/600',
-  'https://picsum.photos/id/1003/800/600',
-  'https://picsum.photos/id/1005/800/600',
-  'https://picsum.photos/id/1000/800/600',
-  'https://picsum.photos/id/1011/800/600',
-  'https://picsum.photos/id/1018/800/600',
-  'https://picsum.photos/id/1020/800/600',
-  'https://picsum.photos/id/1024/800/600',
-  'https://picsum.photos/id/1027/800/600',
-  'https://picsum.photos/id/1035/800/600',
-  'https://picsum.photos/id/1033/800/600',
-  'https://picsum.photos/id/1040/800/600',
-  'https://picsum.photos/id/1043/800/600',
-  'https://picsum.photos/id/1050/800/600',
-  'https://picsum.photos/id/1062/800/600'
-];
-/******************* AUTH / GALLERY ********************/
-document.title = SITE_NAME + ' — private gallery';
-document.querySelector('h1').textContent = SITE_NAME + ' — private gallery';
-const siteCodeInput=document.getElementById('siteCode');
-const unlockBtn=document.getElementById('unlockBtn');
-const gallery=document.getElementById('gallery');
-const grid=document.getElementById('grid');
-const message=document.getElementById('message');
-const authPanel=document.getElementById('authPanel');
-unlockBtn.addEventListener('click',tryCode);
-siteCodeInput.addEventListener('keydown',e=>{if(e.key==='Enter')tryCode();});
-function tryCode(){
-  const val=siteCodeInput.value.trim();
-  if(!val){showMsg('Enter the code first.');return;}
-  if(val===SITE_CODE){showGallery();}
-  else{showMsg('Wrong code — try again.');siteCodeInput.value='';siteCodeInput.focus();}
+// --- Login Function ---
+function checkCode() {
+  const code = document.getElementById("accessCode").value;
+  const correctCode = "1234"; // Change this to your code
+  if (code === correctCode) {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("gallery").style.display = "flex";
+    document.body.style.overflow = "auto";
+  } else {
+    alert("Incorrect code!");
+  }
 }
-function showMsg(txt){message.textContent=txt;message.style.color='#d6e3ff';setTimeout(()=>{message.style.color='';},2200);}
-function showGallery(){authPanel.style.display='none';gallery.style.display='block';renderGrid();window.scrollTo({top:0,behavior:'smooth'});}
-function renderGrid(){
-  grid.innerHTML='';
-  const items=ensureCount(IMAGES,16);
-  items.forEach((src,i)=>{
-    const tile=document.createElement('div');
-    tile.className='tile';
-    tile.innerHTML=`<img alt="Image ${i+1}" src="${src}" loading="lazy" />
-    <div class="download-btn"><button data-src="${src}" data-index="${i}">Download Image</button></div>`;
-    grid.appendChild(tile);
-  });
-  grid.querySelectorAll('button[data-src]').forEach(btn=>{
-    btn.addEventListener('click',async()=>{
-      const src=btn.getAttribute('data-src');
-      const idx=btn.getAttribute('data-index')||'0';
-      btn.disabled=true;btn.textContent='Downloading…';
-      try{
-        await downloadImage(src,`${SITE_NAME.replace(/\s+/g,'_')}_img_${Number(idx)+1}.jpg`);
-        btn.textContent='Downloaded';
-      }catch(err){
-        console.error(err);
-        btn.textContent='Failed — open image';
-        setTimeout(()=>window.open(src,'_blank'),250);
-      }finally{
-        setTimeout(()=>{btn.disabled=false;btn.textContent='Download Image';},1400);
-      }
-    });
-  });
-}
-function ensureCount(arr,count){if(arr.length>=count)return arr.slice(0,count);const out=[];while(out.length<count){out.push(...arr);}return out.slice(0,count);}
-async function downloadImage(url,filename){
-  const res=await fetch(url,{mode:'cors'});
-  if(!res.ok)throw new Error('Network error');
-  const blob=await res.blob();
-  const blobUrl=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=blobUrl;a.download=filename;document.body.appendChild(a);a.click();a.remove();
-  URL.revokeObjectURL(blobUrl);
-}
-if(location.hash==='#lock'){authPanel.style.display='';gallery.style.display='none';}
-siteCodeInput.focus();
 
-/******************* SNOW + RAIN ********************/
-const canvas=document.getElementById("snow");
-const ctx=canvas.getContext("2d");
-function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
-window.addEventListener("resize",resize);resize();
-const snowflakes=[],tinySnow=[],rain=[];
-for(let i=0;i<250;i++)snowflakes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,radius:Math.random()*0.8+0.2,speed:Math.random()*0.7+0.3,drift:Math.random()*0.6-0.3,glow:Math.random()*1});
-for(let i=0;i<120;i++)tinySnow.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,radius:Math.random()*0.3+0.05,speed:Math.random()*0.4+0.2,drift:-0.6,glow:Math.random()*1});
-for(let i=0;i<80;i++)rain.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,length:Math.random()*3+1.5,speed:Math.random()*1.5+1.5,glow:Math.random()*0.5+0.2});
+// --- Download Function ---
+function downloadImage(url) {
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "image.jpg";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+/* --- SNOW + RAIN EFFECT --- */
+const canvas = document.getElementById("snow");
+const ctx = canvas.getContext("2d");
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+resize();
+
+const snowflakes = [];
+for (let i=0;i<250;i++){
+  snowflakes.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    radius: Math.random()*0.8+0.2,
+    speed: Math.random()*0.7+0.3,
+    drift: Math.random()*0.6-0.3,
+    glow: Math.random()*1
+  });
+}
+const tinySnow = [];
+for (let i=0;i<120;i++){
+  tinySnow.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    radius: Math.random()*0.3+0.05,
+    speed: Math.random()*0.4+0.2,
+    drift: -0.6,
+    glow: Math.random()*1
+  });
+}
+const rain = [];
+for (let i=0;i<80;i++){
+  rain.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    length: Math.random()*3+1.5,
+    speed: Math.random()*1.5+1.5,
+    glow: Math.random()*0.5+0.2
+  });
+}
+
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  for(const f of snowflakes){const g=2+Math.sin(Date.now()*0.005+f.glow)*2;ctx.fillStyle="white";ctx.shadowBlur=g;ctx.shadowColor="white";ctx.beginPath();ctx.arc(f.x,f.y,f.radius,0,Math.PI*2);ctx.fill();}
-  for(const f of tinySnow){const g=1+Math.sin(Date.now()*0.005+f.glow)*1;ctx.fillStyle="white";ctx.shadowBlur=g;ctx.shadowColor="white";ctx.beginPath();ctx.arc(f.x,f.y,f.radius,0,Math.PI*2);ctx.fill();}
-  for(const d of rain){const g=d.glow*(1+Math.sin(Date.now()*0.01));ctx.strokeStyle="rgba(200,200,255,0.6)";ctx.shadowBlur=g*2;ctx.shadowColor="white";ctx.lineWidth=0.3;ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.x,d.y+d.length);ctx.stroke();}
+  for (const flake of snowflakes){
+    const glow = 2 + Math.sin(Date.now()*0.005 + flake.glow)*2;
+    ctx.fillStyle = "white";
+    ctx.shadowBlur = glow;
+    ctx.shadowColor = "white";
+    ctx.beginPath();
+    ctx.arc(flake.x, flake.y, flake.radius,0,Math.PI*2);
+    ctx.fill();
+  }
+  for (const flake of tinySnow){
+    const glow = 1 + Math.sin(Date.now()*0.005 + flake.glow)*1;
+    ctx.fillStyle = "white";
+    ctx.shadowBlur = glow;
+    ctx.shadowColor = "white";
+    ctx.beginPath();
+    ctx.arc(flake.x, flake.y, flake.radius,0,Math.PI*2);
+    ctx.fill();
+  }
+  for (const drop of rain){
+    const glow = drop.glow*(1+Math.sin(Date.now()*0.01));
+    ctx.strokeStyle = "rgba(200,200,255,0.6)";
+    ctx.shadowBlur = glow*2;
+    ctx.shadowColor = "white";
+    ctx.lineWidth = 0.3;
+    ctx.beginPath();
+    ctx.moveTo(drop.x, drop.y);
+    ctx.lineTo(drop.x, drop.y+drop.length);
+    ctx.stroke();
+  }
   update();
 }
 function update(){
-  for(const f of snowflakes){f.y+=f.speed;f.x+=f.drift*0.3;if(f.y>canvas.height){f.y=-f.radius;f.x=Math.random()*canvas.width;}}
-  for(const f of tinySnow){f.y+=f.speed;f.x+=f.drift;if(f.y>canvas.height||f.x<0){f.y=-f.radius;f.x=canvas.width+Math.random()*50;}}
-  for(const d of rain){d.y+=d.speed;if(d.y>canvas.height){d.y=-d.length;d.x=Math.random()*canvas.width;}}
+  for (const flake of snowflakes){
+    flake.y += flake.speed;
+    flake.x += flake.drift*0.3;
+    if(flake.y>canvas.height){flake.y=-flake.radius; flake.x=Math.random()*canvas.width;}
+  }
+  for (const flake of tinySnow){
+    flake.y += flake.speed;
+    flake.x += flake.drift;
+    if(flake.y>canvas.height || flake.x<0){flake.y=-flake.radius; flake.x=canvas.width+Math.random()*50;}
+  }
+  for (const drop of rain){
+    drop.y += drop.speed;
+    if(drop.y>canvas.height){drop.y=-drop.length; drop.x=Math.random()*canvas.width;}
+  }
 }
-function animate(){draw();requestAnimationFrame(animate);}animate();
+function animate(){draw(); requestAnimationFrame(animate);}
+animate();
 </script>
+
 </body>
 </html>
