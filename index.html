@@ -3,322 +3,157 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>(name).github.io — Lowkey Pixel Chill</title>
+  <title>(name).github.io — Night Bench</title>
   <style>
-    :root{
-      --bg-dark:#071029; /* night sky */
-      --ground-dark:#0e0b16;
-      --ground-light:#3b2f45;
-      --moon:#f3f4f7;
-      --bench-wood:#6b3f2a;
-      --bench-metal:#2b2b35;
-      --pixel-size:2px; /* scale for pixel look */
+    html,body{
+      height:100%;
+      margin:0;
+      overflow:hidden;
+      background:#0b0f1c;
     }
-    html,body{height:100%;margin:0;background:var(--bg-dark);display:flex;align-items:center;justify-content:center;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial}
-    .wrap{width:100%;max-width:1365px;padding:20px;box-sizing:border-box}
-    canvas{display:block;width:100%;height:auto;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.6);image-rendering:pixelated;background:linear-gradient(#071029 0%, #071029 60%, #020408 100%)}
-    .info{color:#bfcbd8;margin-top:8px;font-size:13px;opacity:0.9}
-    a.deploy{color:#c6b9ff}
+    canvas{
+      display:block;
+      width:100vw;
+      height:100vh;
+      image-rendering:pixelated;
+      background:linear-gradient(#020617 0%, #08142a 50%, #0b0f1c 100%);
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <canvas id="game" width="1365" height="400" ></canvas>
-    <div class="info">Controls: ← → to move, ↑ to jump, S to sit on bench when close. Shooting stars appear every ~1–2 minutes. To publish: push this file as <code>index.html</code> into a repo named <code>(name).github.io</code>.</div>
-  </div>
-
+  <canvas id="scene"></canvas>
   <script>
-  /*
-    Lowkey Chill Pixel Scene — single-file index.html
-    - Canvas sized 1365x400. Ground occupies bottom 200px (y from 200->400).
-    - Stars, moon, slow parallax, shooting stars every 60-120s (random).
-    - Bench facing slightly right, detailed pixel-ish drawing.
-    - Small controllable pixel character (walk + jump + sit)
-    - All art drawn procedurally so everything is contained.
-  */
-
-  const canvas = document.getElementById('game');
+  const canvas = document.getElementById('scene');
   const ctx = canvas.getContext('2d');
-  const W = canvas.width; const H = canvas.height;
 
-  // Ground metrics
-  const GROUND_Y = 200; // top of ground area (so ground height = H - GROUND_Y = 200)
-  const SCALE = 2; // pixel scale multiplier for "chunky" pixel look
+  function resize(){
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
 
-  // Utility
-  function rnd(min,max){return Math.random()*(max-min)+min}
-  function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+  const stars = Array.from({length:300},()=>({
+    x:Math.random()*innerWidth,
+    y:Math.random()*innerHeight*0.6,
+    r:Math.random()*1.5+0.5,
+    t:Math.random()*Math.PI*2
+  }));
 
-  // Starfield
-  const stars = [];
-  for(let i=0;i<250;i++){
-    stars.push({x:Math.random()*W, y:Math.random()*GROUND_Y, r:Math.random()*1.6, twinkle:Math.random()*1.6});
+  const moon = {x:innerWidth*0.8, y:innerHeight*0.2, r:70};
+
+  let shooting = [];
+  function spawnStar(){
+    const startX = Math.random()*innerWidth*0.7;
+    const startY = Math.random()*innerHeight*0.3;
+    const speed = Math.random()*8+6;
+    const angle = Math.random()*Math.PI/6 - Math.PI/12;
+    shooting.push({x:startX, y:startY, vx:speed*Math.cos(angle), vy:speed*Math.sin(angle), life:0, max:100});
+  }
+  function schedule(){
+    setTimeout(()=>{spawnStar();schedule();},Math.random()*60000+60000);
+  }
+  schedule();
+
+  function drawBench(){
+    const w = innerWidth;
+    const h = innerHeight;
+    const benchW = 260;
+    const benchH = 60;
+    const bx = w/2 - benchW/2;
+    const by = h*0.75;
+
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(bx-10, by+benchH-4, benchW+20, 10);
+
+    // legs
+    ctx.fillStyle = '#2b2b35';
+    ctx.fillRect(bx+10, by+benchH-20, 8, 20);
+    ctx.fillRect(bx+benchW-18, by+benchH-20, 8, 20);
+
+    // seat planks
+    const colors = ['#5b3a25','#6c462e','#7d5138'];
+    colors.forEach((c,i)=>{
+      ctx.fillStyle=c;
+      ctx.fillRect(bx, by+i*14, benchW, 14);
+    });
+
+    // backrest
+    ctx.fillStyle='#6c462e';
+    ctx.fillRect(bx+20, by-40, benchW-40, 16);
+    ctx.fillStyle='#2b2b35';
+    ctx.fillRect(bx+18, by-42, benchW-36, 2);
   }
 
-  // Moon
-  const moon = {x:W-220, y:80, r:48, phase:0.12};
+  function drawScene(){
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
 
-  // Shooting stars list
-  const shootingStars = [];
+    // sky
+    const sky = ctx.createLinearGradient(0,0,0,h*0.6);
+    sky.addColorStop(0,'#010513');
+    sky.addColorStop(1,'#0a1830');
+    ctx.fillStyle=sky;
+    ctx.fillRect(0,0,w,h);
 
-  function scheduleNextShootingStar(){
-    const ms = Math.floor(rnd(60_000, 120_000)); // 60-120 seconds
-    setTimeout(()=>{
-      spawnShootingStar();
-      scheduleNextShootingStar();
-    }, ms);
-  }
-
-  function spawnShootingStar(){
-    const startX = rnd(0, W*0.6);
-    const startY = rnd(0, GROUND_Y*0.6);
-    const vx = rnd(6, 12);
-    const vy = rnd(2, 6);
-    shootingStars.push({x:startX, y:startY, vx, vy, life:0, maxLife:120});
-  }
-
-  // Bench (pixel-style) positioned on ground, facing slightly right
-  const bench = {x: W*0.55, y: H-56, w:180, h:40};
-
-  // Player
-  const player = {x:120, y:H-60, vx:0, vy:0, w:20, h:28, speed:2.2, onGround:true, sitting:false};
-
-  // Input
-  const keys = {};
-  window.addEventListener('keydown', e=>{keys[e.key]=true; if(e.key==='s' || e.key==='S') trySit(); });
-  window.addEventListener('keyup', e=>{keys[e.key]=false});
-
-  function trySit(){
-    const distance = Math.abs((player.x + player.w/2) - (bench.x + bench.w/2));
-    if(distance < 70 && Math.abs(player.y - (bench.y - player.h)) < 10){
-      player.sitting = !player.sitting;
-      if(player.sitting) player.vx = 0;
+    // stars
+    for(const s of stars){
+      const a = 0.6+0.4*Math.sin(Date.now()/1000+s.t);
+      ctx.globalAlpha=a;
+      ctx.fillStyle='#ffffff';
+      ctx.fillRect(s.x,s.y,s.r,s.r);
     }
+    ctx.globalAlpha=1;
+
+    // moon
+    const g=ctx.createRadialGradient(moon.x,moon.y,10,moon.x,moon.y,moon.r*2);
+    g.addColorStop(0,'#f3f4f7');
+    g.addColorStop(1,'rgba(243,244,247,0)');
+    ctx.fillStyle=g;
+    ctx.beginPath();
+    ctx.arc(moon.x,moon.y,moon.r,0,Math.PI*2);
+    ctx.fill();
+
+    // ground
+    const grd=ctx.createLinearGradient(0,h*0.7,0,h);
+    grd.addColorStop(0,'#1e1822');
+    grd.addColorStop(1,'#3a2c42');
+    ctx.fillStyle=grd;
+    ctx.fillRect(0,h*0.7,w,h*0.3);
+
+    // distant hills
+    ctx.fillStyle='#14101c';
+    for(let i=0;i<w;i+=3){
+      const y = h*0.7 + Math.sin(i/100)*10;
+      ctx.fillRect(i,y,3,h-y);
+    }
+
+    // shooting stars
+    for(let i=shooting.length-1;i>=0;i--){
+      const s = shooting[i];
+      s.x+=s.vx; s.y+=s.vy; s.life++;
+      const alpha=1-s.life/s.max;
+      ctx.globalAlpha=alpha;
+      ctx.strokeStyle=`rgba(255,255,255,${alpha})`;
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(s.x-s.vx*4,s.y-s.vy*4);
+      ctx.lineTo(s.x,s.y);
+      ctx.stroke();
+      ctx.globalAlpha=1;
+      if(s.life> s.max) shooting.splice(i,1);
+    }
+
+    // bench
+    drawBench();
   }
 
-  // Main loop
-  let last = performance.now();
-  function loop(now){
-    const dt = Math.min(40, now-last);
-    update(dt/16);
-    draw();
-    last = now;
+  function loop(){
+    drawScene();
     requestAnimationFrame(loop);
   }
-
-  // Physics + update
-  function update(t){
-    // Player controls
-    if(!player.sitting){
-      if(keys['ArrowLeft'] || keys['a']||keys['A']) player.vx = -player.speed;
-      else if(keys['ArrowRight'] || keys['d']||keys['D']) player.vx = player.speed;
-      else player.vx = 0;
-
-      if((keys['ArrowUp'] || keys['w']||keys['W']) && player.onGround){ player.vy = -8.5; player.onGround = false }
-    }
-    
-    // Apply gravity
-    player.vy += 0.45;
-    player.x += player.vx * (t||1);
-    player.y += player.vy * (t||1);
-
-    // Ground collision
-    const groundTop = H - (H - GROUND_Y);
-    if(player.y + player.h > H - 40){
-      player.y = H - 40 - player.h;
-      player.vy = 0; player.onGround = true;
-    }
-
-    // Keep inside
-    player.x = clamp(player.x, 8, W - player.w - 8);
-
-    // Shooting stars update
-    for(let i=shootingStars.length-1;i>=0;i--){
-      const s = shootingStars[i];
-      s.x += s.vx; s.y += s.vy; s.life++;
-      if(s.life > s.maxLife || s.x > W+50 || s.y > GROUND_Y+50) shootingStars.splice(i,1);
-    }
-  }
-
-  // Drawing utilities for pixel styling
-  function drawRoundedPixelRect(x,y,w,h,color){
-    ctx.fillStyle = color;
-    ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
-  }
-
-  // Procedural bench drawing (detailed pixel-ish)
-  function drawBench(){
-    const bx = bench.x; const by = bench.y; const bw = bench.w; const bh = bench.h;
-    // Legs
-    ctx.fillStyle = '--';
-    // Bench shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.fillRect(bx-10, by+bh-4, bw+30, 8);
-
-    // Seat planks (3 planks) — wood tones
-    for(let i=0;i<3;i++){
-      const plankY = by + i*10;
-      drawRoundedPixelRect(bx, plankY, bw - i*8, 10, shade('#6b3f2a', -i*10));
-    }
-    // Backrest
-    drawRoundedPixelRect(bx+bw*0.55, by-26, bw*0.35, 18, shade('#6b3f2a', 10));
-    // Metal supports
-    drawRoundedPixelRect(bx-6, by+6, 10, 12, '#2b2b35');
-    drawRoundedPixelRect(bx + bw - 6, by+6, 10, 12, '#2b2b35');
-
-    // Add a small cushion pixel detail
-    drawRoundedPixelRect(bx + 18, by+4, 26, 8, 'rgba(255,255,255,0.06)');
-  }
-
-  // Helper: produce a slightly darker/lighter hex color
-  function shade(hex, percent){
-    // hex like #rrggbb
-    const num = parseInt(hex.slice(1),16);
-    let r = (num>>16) + Math.round(255*percent/100);
-    let g = ((num>>8)&0x00FF) + Math.round(255*percent/100);
-    let b = (num&0x0000FF) + Math.round(255*percent/100);
-    r = clamp(r,0,255); g = clamp(g,0,255); b = clamp(b,0,255);
-    return `rgb(${r},${g},${b})`;
-  }
-
-  // Draw moon with soft glow and subtle crater dots
-  function drawMoon(){
-    const m = moon;
-    const grd = ctx.createRadialGradient(m.x-18, m.y-8, 6, m.x, m.y, m.r*1.8);
-    grd.addColorStop(0, 'rgba(243,244,247,0.98)');
-    grd.addColorStop(1, 'rgba(243,244,247,0.02)');
-    ctx.fillStyle = grd;
-    ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, Math.PI*2); ctx.fill();
-    // Craters
-    for(let i=0;i<8;i++){
-      const angle = Math.random()*Math.PI*2; const rr = Math.random()*m.r*0.6;
-      const cx = m.x + Math.cos(angle)*rr*0.6; const cy = m.y + Math.sin(angle)*rr*0.6;
-      ctx.fillStyle = 'rgba(200,200,210,0.12)'; ctx.beginPath(); ctx.arc(cx, cy, Math.random()*6+2,0,Math.PI*2); ctx.fill();
-    }
-  }
-
-  // Main draw
-  function draw(){
-    // clear
-    ctx.clearRect(0,0,W,H);
-
-    // Sky gradient
-    const sky = ctx.createLinearGradient(0,0,0,GROUND_Y);
-    sky.addColorStop(0,'#020714');
-    sky.addColorStop(0.45,'#071029');
-    sky.addColorStop(1,'#08111f');
-    ctx.fillStyle = sky; ctx.fillRect(0,0,W,GROUND_Y);
-
-    // Stars (twinkling)
-    for(const s of stars){
-      const t = Math.sin(performance.now()/1000 * s.twinkle) * 0.5 + 0.5;
-      ctx.globalAlpha = 0.6 + 0.4 * t;
-      ctx.fillStyle = 'white';
-      ctx.fillRect(Math.round(s.x), Math.round(s.y), Math.max(1, Math.round(s.r)), Math.max(1, Math.round(s.r)));
-    }
-    ctx.globalAlpha = 1;
-
-    // Moon
-    drawMoon();
-
-    // Subtle distant horizon glow
-    const horizon = ctx.createLinearGradient(0,GROUND_Y-30,0,GROUND_Y+20);
-    horizon.addColorStop(0,'rgba(255,255,255,0.02)');
-    horizon.addColorStop(1,'rgba(0,0,0,0.2)');
-    ctx.fillStyle = horizon; ctx.fillRect(0,GROUND_Y-40,W,80);
-
-    // Shooting stars
-    for(const s of shootingStars){
-      const alpha = 1 - s.life / s.maxLife;
-      ctx.globalAlpha = alpha;
-      // trail
-      ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
-      ctx.lineWidth = 2.6;
-      ctx.beginPath(); ctx.moveTo(s.x - s.vx*6, s.y - s.vy*6); ctx.lineTo(s.x, s.y); ctx.stroke();
-      // head
-      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-      ctx.beginPath(); ctx.arc(s.x, s.y, 2.6, 0, Math.PI*2); ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-
-    // Ground (pixel-textured)
-    // base
-    ctx.fillStyle = '#071019'; ctx.fillRect(0,GROUND_Y,W,H-GROUND_Y);
-    // layered soil blocks
-    for(let x=0;x<W;x+=12){
-      const h = Math.sin((x/60) + performance.now()/8000) * 6;
-      ctx.fillStyle = '#1b1520'; ctx.fillRect(x,GROUND_Y + 40 + h, 12, H - GROUND_Y - 40 - h);
-    }
-    // soft grass edge
-    const grass = ctx.createLinearGradient(0,GROUND_Y,0,GROUND_Y+36);
-    grass.addColorStop(0,'#1b3b3a'); grass.addColorStop(1,'#3b2f45');
-    ctx.fillStyle = grass; ctx.fillRect(0,GROUND_Y, W, 36);
-
-    // Bench (detailed)
-    drawBench();
-
-    // Player (pixel sprite)
-    drawPlayer();
-
-    // Foreground tiny stars and dust
-    for(let i=0;i<30;i++){
-      const px = (i*73 + (performance.now()/60)) % W;
-      const py = GROUND_Y - 10 - (Math.sin((px+i)/60 + performance.now()/4000)*6);
-      ctx.globalAlpha = 0.06;
-      ctx.fillRect(px, py, 2, 2);
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  function drawPlayer(){
-    // Simple pixel character with a little idle bob. If sitting, adjust pose
-    const p = player;
-    const bob = Math.sin(performance.now()/420) * 2;
-    let px = Math.round(p.x); let py = Math.round(p.y + (p.sitting ? 6 : bob));
-
-    // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(px+2, H-40, p.w-4, 6);
-
-    // Body blocks
-    if(p.sitting){
-      // seated posture
-      ctx.fillStyle = '#f0c08a'; drawRoundedPixelRect(px, py+8, 12, 12, '#f0c08a'); // torso
-      drawRoundedPixelRect(px-6, py+16, 28, 6, '#2b2b35'); // legs tuck
-      // head
-      drawRoundedPixelRect(px+2, py-10, 12, 12, '#ffdcb3');
-    } else {
-      // standing/walking
-      ctx.fillStyle = '#f0c08a'; drawRoundedPixelRect(px, py, 12, 16, '#f0c08a'); // torso
-      drawRoundedPixelRect(px+2, py-14, 12, 12, '#ffdcb3'); // head
-      // legs
-      ctx.fillStyle = '#2b2b35'; drawRoundedPixelRect(px+2, py+16, 4, 10, '#2b2b35'); drawRoundedPixelRect(px+8, py+16, 4, 10, '#2b2b35');
-    }
-  }
-
-  // start shooting star cycle
-  scheduleNextShootingStar();
-
-  // spawn one early so page feels alive
-  setTimeout(spawnShootingStar, 1500);
-
-  // start loop
-  requestAnimationFrame(loop);
-
-  // Resize handling — keep canvas crisp
-  function fitCanvas(){
-    // We set CSS width responsive; ensure no pixel blurriness by integer scaling
-    const containerWidth = Math.min(window.innerWidth - 40, 1365);
-    canvas.style.width = containerWidth + 'px';
-  }
-  window.addEventListener('resize', fitCanvas);
-  fitCanvas();
-
-  // Optional: simple screenshot helper for the user
-  window.saveSnapshot = function(){
-    const a = document.createElement('a'); a.download = 'scene-snapshot.png';
-    a.href = canvas.toDataURL('image/png'); a.click();
-  }
-
+  loop();
   </script>
 </body>
 </html>
