@@ -1,592 +1,108 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SkyRunner — single-file HTML game</title>
-<style>
-  :root{
-    --bg:#0b1220; --fg:#e6f0ff; --accent:#6ee7b7; --muted:#98a0b2;
-    --ui-bg: rgba(0,0,0,0.35);
-    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  }
-  html,body{height:100%;margin:0;background:linear-gradient(180deg,#041028 0%, #071227 60%, #0b1220 100%);color:var(--fg);}
-  #gameWrap{display:flex;align-items:center;justify-content:center;height:100%;padding:20px;box-sizing:border-box;}
-  canvas{image-rendering:optimizeSpeed;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,.6);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06));}
-  #ui{
-    position: absolute; left:20px; top:20px; font-size:14px; color:var(--fg); mix-blend-mode:screen;
-  }
-  .panel{
-    background:var(--ui-bg); padding:10px 12px; border-radius:10px; backdrop-filter: blur(6px);
-    border:1px solid rgba(255,255,255,0.03);
-  }
-  .title{font-weight:700;font-size:20px;margin-bottom:6px}
-  .muted{color:var(--muted); font-size:13px}
-  .center{display:flex;flex-direction:column;align-items:center;gap:8px}
-  button{background:var(--accent);border:none;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer}
-  button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--fg)}
-  footer{position:fixed;right:16px;bottom:12px;font-size:12px;color:var(--muted)}
-  /* make sure UI is visible on small screens */
-  @media (max-width:520px){ #ui{left:10px;top:10px;font-size:12px} button{padding:8px 10px} }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Invaders Challenge</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #000;
+            font-family: 'Courier New', monospace;
+            color: #0f0;
+        }
+        #gameContainer {
+            position: relative;
+        }
+        #gameCanvas {
+            border: 2px solid #0f0;
+            background: #111;
+        }
+        #ui {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+        }
+        #gameOver {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            color: #f00;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-<div id="gameWrap" aria-live="polite">
-  <canvas id="c" width="900" height="600" role="img" aria-label="SkyRunner game canvas"></canvas>
-  <div id="ui" class="panel" aria-hidden="false">
-    <div class="title">SkyRunner</div>
-    <div class="muted">Controls: Space / Up / Tap to jump. Hold to boost. P to pause.</div>
-    <div style="height:8px"></div>
-    <div id="scoreBox">Score: 0</div>
-    <div style="height:6px"></div>
-    <div><button id="soundBtn">Sound: On</button> <button class="secondary" id="shareBtn">Share / Copy URL</button></div>
-  </div>
-</div>
-<footer class="muted">One-file game • Paste into index.html • High score saved locally</footer>
+    <div id="gameContainer">
+        <div id="ui">
+            <div>Score: <span id="score">0</span></div>
+            <div>Lives: <span id="lives">3</span></div>
+        </div>
+        <canvas id="gameCanvas" width="480" height="640"></canvas>
+        <div id="gameOver">GAME OVER<br><button onclick="resetGame()">Play Again</button></div>
+    </div>
 
-<script>
-/*
-  SkyRunner - single-file endless runner
-  - Paste into index.html and open in browser
-  - Designed to be judged as a single-file GitHub game
-*/
+    <script>
+        // === BASIC GAME SETUP ===
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const livesElement = document.getElementById('lives');
+        const gameOverElement = document.getElementById('gameOver');
 
-/* ====== Config ====== */
-const CONFIG = {
-  baseWidth: 900, baseHeight: 600,
-  groundY: null, // computed
-  gravity: 1800, // px/s^2
-  jumpVel: -650, // px/s
-  boostFactor: 1.9, // while holding
-  speedStart: 260,
-  speedMax: 1100,
-  spawnGapMin: 450,
-  spawnGapMax: 900,
-  difficultyIncrease: 0.0006, // per ms
-  color: { bgTop:'#041028', bgBottom:'#071227', player:'#FFD36E', obstacle:'#FF6B6B', accent:'#6EE7B7' }
-};
+        // === GAME STATE ===
+        let score = 0;
+        let lives = 3;
+        let gameRunning = true;
 
-/* ====== Globals ====== */
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d', { alpha:true });
-let W = canvas.width, H = canvas.height;
-let last = 0, dt = 0;
-let running = false, paused = false, gameOver = false;
-let score = 0, highScore = 0;
-let audioEnabled = true;
-const storageKey = 'skyrunner_highscore_v1';
+        // === PLAYER ===
+        const player = {
+            x: canvas.width / 2 - 20,
+            y: canvas.height - 40,
+            width: 40,
+            height: 20,
+            speed: 5,
+            color: '#0f0'
+        };
 
-/* ====== Resize & DPR handling ====== */
-function fitCanvas() {
-  const ratio = CONFIG.baseWidth / CONFIG.baseHeight;
-  const maxW = Math.min(window.innerWidth - 40, 1200);
-  const maxH = window.innerHeight - 40;
-  let width = maxW;
-  let height = Math.round(width / ratio);
-  if (height > maxH) { height = maxH; width = Math.round(height * ratio); }
-  canvas.style.width = width + 'px';
-  canvas.style.height = height + 'px';
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  canvas.width = CONFIG.baseWidth * dpr;
-  canvas.height = CONFIG.baseHeight * dpr;
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  W = CONFIG.baseWidth; H = CONFIG.baseHeight;
-  CONFIG.groundY = H - 110;
-}
-window.addEventListener('resize', fitCanvas);
-fitCanvas();
+        // === PROJECTILES & ENEMIES ===
+        let projectiles = [];
+        let enemies = [];
 
-/* ====== Utility ====== */
-const rand = (a,b)=> Math.random()*(b-a)+a;
-const clamp = (v,a,b)=> Math.max(a, Math.min(b,v));
+        // ... (The AI will fill in the rest of the game logic here)
+        // Your challenge is to complete this Space Invaders game!
 
-/* ====== Audio: simple click / tone FX using WebAudio ====== */
-const AudioEngine = (function(){
-  let ctxAudio = null;
-  function ensure() {
-    if (!ctxAudio) ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
-    return ctxAudio;
-  }
-  function beep(freq=440,dur=0.08,vol=0.08,type='sine', timeOffset=0) {
-    if (!audioEnabled) return;
-    const c = ensure();
-    const now = c.currentTime + timeOffset;
-    const o = c.createOscillator();
-    const g = c.createGain();
-    o.type = type;
-    o.frequency.setValueAtTime(freq, now);
-    g.gain.setValueAtTime(vol, now);
-    o.connect(g);
-    g.connect(c.destination);
-    o.start(now);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-    o.stop(now + dur + 0.02);
-  }
-  function chord(notes,dur=0.12){ notes.forEach(n=>beep(n,dur,0.06,'saw',0)); }
-  return { beep, chord, ensure };
-})();
+        function gameLoop() {
+            if (!gameRunning) return;
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
 
-/* ====== Player ====== */
-const player = {
-  x: 140, y: 0, w: 44, h: 36,
-  vy:0, onGround: false, boosting:false, blink:0,
-  reset(){
-    this.x = 140; this.y = CONFIG.groundY - this.h; this.vy = 0; this.onGround=true; this.boosting=false; this.blink=0;
-  },
-  update(dt, speed){
-    // apply gravity
-    this.vy += CONFIG.gravity * dt;
-    if (this.boosting && !this.onGround) this.vy += CONFIG.gravity * (CONFIG.boostFactor-1) * dt;
-    this.y += this.vy * dt;
-    if (this.y >= CONFIG.groundY - this.h) {
-      this.y = CONFIG.groundY - this.h;
-      this.vy = 0;
-      this.onGround = true;
-    } else this.onGround = false;
-    // simple breathing animation
-    this.blink += dt * (this.onGround ? 2 : 6);
-  },
-  jump(){
-    if (this.onGround) {
-      this.vy = CONFIG.jumpVel;
-      this.onGround = false;
-      AudioEngine.beep(640,0.09,0.08,'triangle');
-    }
-  },
-  draw(ctx){
-    // body - rounded rectangle
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    // shadow
-    ctx.fillStyle = "rgba(0,0,0,0.18)";
-    ctx.beginPath();
-    ctx.ellipse(20, this.h + 12, 28, 9, 0, 0, Math.PI*2);
-    ctx.fill();
-    // player body
-    ctx.fillStyle = CONFIG.color.player;
-    roundRect(ctx, 0, 0, this.w, this.h, 8, true, false);
-    // eye
-    ctx.fillStyle = '#102226';
-    const eyeY = 10 + Math.sin(this.blink)*1.6;
-    ctx.beginPath(); ctx.ellipse(30, eyeY, 5, 6, 0, 0, Math.PI*2); ctx.fill();
-    // wing / booster when airborne
-    if (!this.onGround) {
-      ctx.fillStyle = CONFIG.color.accent;
-      ctx.beginPath();
-      ctx.moveTo(-2, this.h*0.4);
-      ctx.lineTo(-8, this.h*0.7);
-      ctx.lineTo(-2, this.h*0.9);
-      ctx.closePath(); ctx.fill();
-    }
-    ctx.restore();
-  }
-};
+        function update() {
+            // Update game state: move player, projectiles, enemies, check collisions
+        }
 
-/* ====== Obstacles ====== */
-let obstacles = [];
-function spawnObstacle(speed){
-  // types: cactus (low), flying (mid), tall (high)
-  const type = Math.random() < 0.25 ? 'fly' : (Math.random() < 0.5 ? 'tall' : 'low');
-  const w = type === 'fly' ? 56 : (type === 'tall' ? 52 : 36);
-  const h = type === 'fly' ? 38 : (type === 'tall' ? 110 : 52);
-  const y = type === 'fly' ? CONFIG.groundY - player.h - 140 - rand(0,50) : CONFIG.groundY - h;
-  const gap = rand(CONFIG.spawnGapMin, CONFIG.spawnGapMax);
-  obstacles.push({
-    x: W + gap/10 + rand(0,200),
-    y, w, h,
-    vx: -speed * (type === 'fly' ? 1.05 : 1),
-    type, passed:false
-  });
-}
+        function render() {
+            // Clear canvas and draw all game objects
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
 
-/* ====== Particles (for polish) ====== */
-let particles = [];
-function emit(x,y,n=8,color=CONFIG.color.accent){
-  for(let i=0;i<n;i++){
-    particles.push({
-      x,y,
-      vx: rand(-220,220),
-      vy: rand(-440,-80),
-      life: rand(0.35,0.9),
-      t:0,
-      size: rand(2,6),
-      color
-    });
-  }
-}
+        function resetGame() {
+            // Reset the game state to start over
+        }
 
-/* ====== Helpers ====== */
-function roundRect(ctx,x,y,w,h,r,fill,stroke){
-  if (typeof r === 'undefined') r = 5;
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r);
-  ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r);
-  ctx.arcTo(x,y,x+w,y,r);
-  ctx.closePath();
-  if (fill) ctx.fill();
-  if (stroke) ctx.stroke();
-}
-
-/* ====== Game Flow: start, reset, update, draw ====== */
-function loadHighScore(){ try{ highScore = Number(localStorage.getItem(storageKey) || 0);}catch(e){highScore=0;} }
-function saveHighScore(){ try{ localStorage.setItem(storageKey, String(Math.floor(highScore))); }catch(e){} }
-
-function resetGame(){
-  score = 0;
-  obstacles = [];
-  particles = [];
-  player.reset();
-  running = true;
-  paused = false;
-  gameOver = false;
-  elapsedDifficulty = 0;
-  spawnTimer = 0;
-  speed = CONFIG.speedStart;
-  last = performance.now();
-  AudioEngine.ensure(); // wake audio on first run (user gesture required on some browsers)
-}
-
-let spawnTimer = 0;
-let speed = CONFIG.speedStart;
-let elapsedDifficulty = 0;
-
-function updateGame(delta){
-  // delta in seconds
-  if (!running || paused || gameOver) return;
-  // increase difficulty
-  elapsedDifficulty += delta * 1000;
-  speed = clamp(CONFIG.speedStart + elapsedDifficulty * CONFIG.difficultyIncrease * 1000, CONFIG.speedStart, CONFIG.speedMax);
-  // spawn obstacles periodically
-  spawnTimer -= delta * 1000;
-  if (spawnTimer <= 0) {
-    spawnObstacle(speed);
-    spawnTimer = rand(CONFIG.spawnGapMin, CONFIG.spawnGapMax) / (speed/300); // faster => shorter gaps
-  }
-
-  // update obstacles
-  for (let i = obstacles.length-1; i>=0; i--){
-    const ob = obstacles[i];
-    ob.x += ob.vx * delta;
-    if (!ob.passed && ob.x + ob.w < player.x) {
-      ob.passed = true;
-      score += Math.max(10, Math.floor(1 + speed/80));
-      if (Math.random() < 0.06) { emit(ob.x + ob.w/2, ob.y + ob.h/2, 10); AudioEngine.beep(880,0.06,0.03); }
-    }
-    if (ob.x + ob.w < -80) obstacles.splice(i,1);
-  }
-
-  // update particles
-  for (let i = particles.length-1; i>=0; i--){
-    const p = particles[i];
-    p.vy += 900*delta;
-    p.x += p.vx * delta;
-    p.y += p.vy * delta;
-    p.t += delta;
-    if (p.t >= p.life) particles.splice(i,1);
-  }
-
-  // update player
-  player.update(delta, speed);
-
-  // collisions
-  for (let ob of obstacles){
-    if (rectsOverlap(player.x, player.y, player.w, player.h, ob.x, ob.y, ob.w, ob.h)) {
-      // collision -> game over
-      doGameOver();
-      break;
-    }
-  }
-
-  // score scaling
-  score += delta * (speed / 30);
-  if (score > highScore) { highScore = Math.floor(score); saveHighScore(); }
-
-  // minor polish: spawn floating bits from ground with some probability
-  if (Math.random() < 0.01) emit(rand(0,W), CONFIG.groundY - rand(4,14), 2, '#87e3ff');
-}
-
-/* collision */
-function rectsOverlap(x1,y1,w1,h1,x2,y2,w2,h2){
-  return !(x1 + w1 < x2 || x1 > x2 + w2 || y1 + h1 < y2 || y1 > y2 + h2);
-}
-
-function doGameOver(){
-  gameOver = true;
-  running = false;
-  AudioEngine.chord([220,330,440], 0.24);
-  emit(player.x + player.w/2, player.y + player.h/2, 22, CONFIG.color.obstacle);
-}
-
-/* ====== Render ====== */
-function drawBackground(ctx, t){
-  // gradient sky
-  const g = ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0, CONFIG.color.bgTop);
-  g.addColorStop(1, CONFIG.color.bgBottom);
-  ctx.fillStyle = g;
-  ctx.fillRect(0,0,W,H);
-  // subtle moving stars
-  for (let i=0;i<80;i++){
-    const x = ( (i*37 + (t*0.02*(i%3+1))) % W );
-    const y = 20 + ((i*97) % (H/2));
-    const r = ((i*13) % 3) * 0.6;
-    ctx.fillStyle = 'rgba(255,255,255,'+ (0.06 + ((i%7)/14)) +')';
-    ctx.fillRect(x, y, 1 + r, 1 + r);
-  }
-  // parallax hills
-  ctx.save();
-  for (let layer=0; layer<3; layer++){
-    ctx.fillStyle = `rgba(12,24,36,${0.08 + layer*0.08})`;
-    ctx.beginPath();
-    const amp = 14 + layer*36;
-    const base = CONFIG.groundY - 12 - layer*18;
-    ctx.moveTo(0, H);
-    ctx.lineTo(0, base);
-    for (let x = 0; x <= W; x += 20){
-      ctx.lineTo(x, base - Math.sin((x*0.012) + (t*0.0008*(layer+1))) * amp );
-    }
-    ctx.lineTo(W, H);
-    ctx.closePath();
-    ctx.fill();
-  }
-  ctx.restore();
-  // sun / glow
-  ctx.beginPath();
-  const sunX = W - 120 - (Math.sin(t*0.0006)*20);
-  ctx.fillStyle = 'rgba(255,190,110,0.05)';
-  ctx.arc(sunX, 80, 120, 0, Math.PI*2); ctx.fill();
-}
-
-/* main draw */
-function render(now){
-  // now in ms
-  const t = now;
-  // clear
-  ctx.clearRect(0,0,W,H);
-  drawBackground(ctx, t);
-
-  // draw ground
-  ctx.fillStyle = '#071827';
-  ctx.fillRect(0, CONFIG.groundY, W, H - CONFIG.groundY);
-  // decorative track
-  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(0, CONFIG.groundY+4); ctx.lineTo(W, CONFIG.groundY+4); ctx.stroke();
-
-  // obstacles
-  for (let ob of obstacles){
-    drawObstacle(ctx, ob);
-  }
-
-  // player
-  player.draw(ctx);
-
-  // particles
-  for (let p of particles){
-    ctx.globalAlpha = clamp(1 - (p.t / p.life), 0, 1);
-    roundRect(ctx, p.x - p.size/2, p.y - p.size/2, p.size, p.size, 3, true, false);
-    ctx.globalAlpha = 1;
-  }
-
-  // HUD
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  roundRect(ctx, 18,18,220,56,10,true,false);
-  ctx.fillStyle = CONFIG.color.accent;
-  ctx.font = '700 20px Inter, Arial';
-  ctx.fillText('Score: ' + Math.floor(score), 28, 42);
-  ctx.font = '600 12px Inter, Arial';
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.fillText('Best: ' + highScore, 28, 60);
-
-  // overlays
-  if (!running && !gameOver) {
-    drawTitleScreen(ctx);
-  } else if (paused) {
-    drawPause(ctx);
-  } else if (gameOver) {
-    drawGameOver(ctx);
-  }
-}
-
-/* obstacle drawing */
-function drawObstacle(ctx, ob){
-  ctx.save();
-  ctx.translate(ob.x, ob.y);
-  // shadow base
-  ctx.fillStyle = 'rgba(0,0,0,0.16)';
-  ctx.fillRect(0+4, ob.h+8, ob.w, 8);
-  // body
-  ctx.fillStyle = CONFIG.color.obstacle;
-  roundRect(ctx, 0,0, ob.w, ob.h, 8, true, false);
-  // simple decoration
-  ctx.fillStyle = 'rgba(255,255,255,0.06)';
-  ctx.fillRect(8,8, ob.w - 16, Math.min(16, ob.h - 16));
-  ctx.restore();
-}
-
-/* title / pause / gameover UI drawn on canvas for single-file */
-function drawTitleScreen(ctx){
-  ctx.save();
-  ctx.fillStyle = 'rgba(2,6,12,0.7)';
-  roundRect(ctx, W/2 - 260, H/2 - 120, 520, 240, 16, true, false);
-  ctx.fillStyle = CONFIG.color.accent;
-  ctx.font = '700 36px Inter, Arial';
-  ctx.fillText('SKYRUNNER', W/2 - 130, H/2 - 36);
-  ctx.font = '500 16px Inter, Arial';
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.fillText('Press Space / Up / Tap to jump and avoid obstacles.', W/2 - 170, H/2 - 4);
-  ctx.fillStyle = 'rgba(255,255,255,0.75)';
-  ctx.fillText('Hold jump to boost. Short, polished experience wins.', W/2 - 170, H/2 + 22);
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.font = '700 20px Inter, Arial';
-  ctx.fillText('Click to start', W/2 - 48, H/2 + 70);
-  ctx.restore();
-}
-
-/* pause */
-function drawPause(ctx){
-  ctx.save();
-  ctx.fillStyle = 'rgba(2,6,12,0.65)';
-  roundRect(ctx, W/2 - 160, H/2 - 64, 320, 128, 12, true, false);
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.font = '700 26px Inter, Arial';
-  ctx.fillText('PAUSED', W/2 - 48, H/2 - 4);
-  ctx.restore();
-}
-
-/* game over */
-function drawGameOver(ctx){
-  ctx.save();
-  ctx.fillStyle = 'rgba(2,6,12,0.8)';
-  roundRect(ctx, W/2 - 260, H/2 - 140, 520, 280, 16, true, false);
-  ctx.fillStyle = CONFIG.color.obstacle;
-  ctx.font = '700 34px Inter, Arial';
-  ctx.fillText('GAME OVER', W/2 - 120, H/2 - 36);
-  ctx.fillStyle = 'rgba(255,255,255,0.95)';
-  ctx.font = '600 18px Inter, Arial';
-  ctx.fillText('Score: ' + Math.floor(score), W/2 - 60, H/2 - 2);
-  ctx.fillText('Best: ' + highScore, W/2 - 60, H/2 + 26);
-  ctx.font = '600 14px Inter, Arial';
-  ctx.fillStyle = 'rgba(255,255,255,0.8)';
-  ctx.fillText('Click or press Enter to restart', W/2 - 95, H/2 + 74);
-  ctx.restore();
-}
-
-/* ====== Input handling ====== */
-let keys = {};
-let pointerDown = false;
-let lastTap = 0;
-
-function onKey(e){
-  if (e.type === 'keydown') {
-    keys[e.code] = true;
-  } else {
-    keys[e.code] = false;
-  }
-  // prevent page from scrolling with Space
-  if (['Space','ArrowUp'].includes(e.code)) e.preventDefault();
-  if (e.type === 'keydown') {
-    if (!running && !gameOver) startFromInput();
-    if (gameOver && (e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter')) {
-      resetGame();
-    }
-    if (e.code === 'KeyP') paused = !paused;
-    if (e.code === 'KeyM') toggleSound();
-  }
-}
-window.addEventListener('keydown', onKey);
-window.addEventListener('keyup', onKey);
-
-canvas.addEventListener('pointerdown', (e)=> {
-  pointerDown = true;
-  startFromInput();
-  // jump / hold boost
-  player.jump();
-  player.boosting = true;
-});
-window.addEventListener('pointerup', (e)=> { pointerDown = false; player.boosting = false; });
-
-canvas.addEventListener('click', (e)=> {
-  const ts = performance.now();
-  if (!running && !gameOver) startFromInput();
-  if (gameOver && ts - lastTap > 200) { resetGame(); lastTap = ts; }
-});
-
-/* Start when user interacts (for autoplay audio restrictions) */
-function startFromInput(){
-  if (!running && !gameOver) {
-    resetGame();
-  }
-}
-
-/* UI buttons */
-document.getElementById('soundBtn').addEventListener('click', toggleSound);
-function toggleSound(){
-  audioEnabled = !audioEnabled;
-  document.getElementById('soundBtn').innerText = 'Sound: ' + (audioEnabled ? 'On' : 'Off');
-  if (audioEnabled) { try{ AudioEngine.ensure().resume(); }catch(e){} }
-}
-
-document.getElementById('shareBtn').addEventListener('click', ()=>{
-  // copy current URL and append note for the contest to README etc.
-  const text = location.href.split('#')[0] + '#skyrunner';
-  if (navigator.clipboard) navigator.clipboard.writeText(text).then(()=>{ alert('URL copied.'); }, ()=>{ prompt('Copy this URL:', text); });
-  else prompt('Copy this URL:', text);
-});
-
-/* ====== Game Loop ====== */
-function loop(now){
-  if (!last) last = now;
-  dt = (now - last) / 1000; // seconds
-  if (dt > 0.25) dt = 0.25; // clamp large frame gaps
-  if (!paused && running) {
-    // input: jumping on space or arrowup
-    if (keys['Space'] || keys['ArrowUp']) {
-      // for immediate response, jump once on keydown edge:
-      if (!keyPressedPrev['Space'] && keys['Space']) player.jump();
-      if (!keyPressedPrev['ArrowUp'] && keys['ArrowUp']) player.jump();
-      player.boosting = true;
-    } else {
-      player.boosting = false;
-    }
-    updateGame(dt);
-  }
-  render(now);
-  keyPressedPrev = {...keys};
-  last = now;
-  requestAnimationFrame(loop);
-}
-let keyPressedPrev = {};
-
-/* ====== Init & preload ====== */
-function init(){
-  loadHighScore();
-  player.reset();
-  // display initial UI text values
-  document.getElementById('scoreBox').innerText = 'Score: 0';
-  document.getElementById('soundBtn').innerText = 'Sound: ' + (audioEnabled ? 'On' : 'Off');
-  // small ticker to update HTML HUD
-  setInterval(()=> {
-    document.getElementById('scoreBox').innerText = 'Score: ' + Math.floor(score) + ' • Best: ' + highScore;
-  }, 250);
-  // start animation loop
-  requestAnimationFrame(loop);
-}
-init();
-
-/* ====== Accessibility helpers: allow keyboard navigation through the UI (optional) ====== */
-document.body.addEventListener('keydown', (e)=>{
-  if (e.key === 'Enter' && !running && !gameOver) startFromInput();
-  if (e.key === 'Enter' && gameOver) resetGame();
-});
-
-/* ====== Small polish: initial obstacles so it's not empty ====== */
-for (let i=0;i<3;i++) spawnObstacle(CONFIG.speedStart * (1 + i*0.12));
-
-/* End of game code */
-</script>
+        // Start the game loop
+        gameLoop();
+    </script>
 </body>
 </html>
-
