@@ -1,108 +1,643 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Invaders Challenge</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: #000;
-            font-family: 'Courier New', monospace;
-            color: #0f0;
-        }
-        #gameContainer {
-            position: relative;
-        }
-        #gameCanvas {
-            border: 2px solid #0f0;
-            background: #111;
-        }
-        #ui {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-        }
-        #gameOver {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 48px;
-            color: #f00;
-            text-align: center;
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pixel Knight — Lofi Campfire Scene</title>
+<style>
+  html,body { height:100%; margin:0; background:#0b0f1a; }
+  #container { width:100%; height:100vh; display:flex; align-items:center; justify-content:center; }
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; background: #081024; }
+  #ui {
+    position: fixed;
+    left: 12px;
+    top: 12px;
+    color: rgba(255,255,255,0.9);
+    font-family: Inter, Arial, sans-serif;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+  #ui button {
+    background: rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.06);
+    color: #fff;
+    padding:6px 10px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  #ui button:active{ transform: translateY(1px); }
+  #credits { position: fixed; right:12px; bottom:12px; color:rgba(255,255,255,0.6); font-size:12px; font-family:Inter,Arial; }
+</style>
 </head>
 <body>
-    <div id="gameContainer">
-        <div id="ui">
-            <div>Score: <span id="score">0</span></div>
-            <div>Lives: <span id="lives">3</span></div>
-        </div>
-        <canvas id="gameCanvas" width="480" height="640"></canvas>
-        <div id="gameOver">GAME OVER<br><button onclick="resetGame()">Play Again</button></div>
-    </div>
+<div id="ui">
+  <span>Press ← → to shift camera</span>
+  <button id="musicToggle">Toggle Music</button>
+</div>
+<div id="container">
+  <canvas id="screen"></canvas>
+</div>
+<div id="credits">Pixel scene: generated with code • Ambient loop optional</div>
 
-    <script>
-        // === BASIC GAME SETUP ===
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreElement = document.getElementById('score');
-        const livesElement = document.getElementById('lives');
-        const gameOverElement = document.getElementById('gameOver');
+<!-- Optional music: replace src with any lofi loop you have rights to use.
+     It is intentionally not autoplaying on load to avoid browser autoplay restrictions.
+-->
+<audio id="music" loop crossorigin="anonymous">
+  <source src="" type="audio/mpeg">
+  <!-- If you want a sample track, put a valid URL here. -->
+</audio>
 
-        // === GAME STATE ===
-        let score = 0;
-        let lives = 3;
-        let gameRunning = true;
+<script>
+/*
+  Pixel Lofi Scene
+  - Offscreen "pixel" canvas is small (e.g. 200x112)
+  - Scaled to fit window while preserving pixel art look
+  - Draws background layers, stars, mountains, grass
+  - Draws programmatic pixel-art knight & wolf
+  - Adds animated campfire (flame particles), flicker light, smoke, and twinkling stars
+  - Camera can shift left/right with arrow keys for subtle parallax
+*/
 
-        // === PLAYER ===
-        const player = {
-            x: canvas.width / 2 - 20,
-            y: canvas.height - 40,
-            width: 40,
-            height: 20,
-            speed: 5,
-            color: '#0f0'
-        };
+const screen = document.getElementById('screen');
+const ctx = screen.getContext('2d');
 
-        // === PROJECTILES & ENEMIES ===
-        let projectiles = [];
-        let enemies = [];
+// Low-resolution pixel canvas
+const PIXEL_W = 320;         // internal pixel width (tweak for detail)
+const PIXEL_H = 180;         // internal pixel height (16:9-ish)
+let scale = 3;               // will be recalculated to fit window
 
-        // ... (The AI will fill in the rest of the game logic here)
-        // Your challenge is to complete this Space Invaders game!
+// Offscreen buffer
+const buffer = document.createElement('canvas');
+buffer.width = PIXEL_W;
+buffer.height = PIXEL_H;
+const bctx = buffer.getContext('2d');
 
-        function gameLoop() {
-            if (!gameRunning) return;
-            update();
-            render();
-            requestAnimationFrame(gameLoop);
-        }
+// Camera (for small horizontal parallax)
+let cameraX = 0;
+const cameraTarget = { x: 0 };
 
-        function update() {
-            // Update game state: move player, projectiles, enemies, check collisions
-        }
+// Stars
+const STARS = [];
+const NUM_STARS = 180;
 
-        function render() {
-            // Clear canvas and draw all game objects
-            ctx.fillStyle = '#111';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
+// Fire particles
+const fireParticles = [];
 
-        function resetGame() {
-            // Reset the game state to start over
-        }
+// Smoke
+const smokeParticles = [];
 
-        // Start the game loop
-        gameLoop();
-    </script>
+// Colors palette (muted, lofi)
+const palette = {
+  skyTop: '#0b1630',
+  skyBottom: '#112a40',
+  moon: '#f6f3e8',
+  star: '#fff9eb',
+  mountain1: '#0f2b38',
+  mountain2: '#11303f',
+  ground: '#1e2a24',
+  grass: ['#1f4b2f', '#234f33', '#274c30'],
+  fireColors: ['#ffef7a','#ffd692','#ff8d5a','#ff4b34'],
+  rock: '#83766b',
+  knightMetal: ['#c7ced6','#9aa4ad','#6d757b'],
+  knightCloth: ['#7b2c2c','#5b1f1f'],
+  wolfFur: ['#bfbfbf','#9e9e9e','#6e6e6e'],
+  shadow: 'rgba(0,0,0,0.45)'
+};
+
+// Responsive: set canvas size to window while keeping integer scaling
+function resize() {
+  const containerW = window.innerWidth;
+  const containerH = window.innerHeight;
+  // compute integer scale that fits
+  const s1 = Math.floor(containerW / PIXEL_W);
+  const s2 = Math.floor(containerH / PIXEL_H);
+  scale = Math.max(1, Math.min(s1 || 1, s2 || 1));
+  screen.width = PIXEL_W * scale;
+  screen.height = PIXEL_H * scale;
+  screen.style.width = (PIXEL_W * scale) + 'px';
+  screen.style.height = (PIXEL_H * scale) + 'px';
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Initialize stars
+for (let i = 0; i < NUM_STARS; i++) {
+  STARS.push({
+    x: Math.random() * PIXEL_W,
+    y: Math.random() * PIXEL_H * 0.45, // top half
+    size: Math.random() < 0.12 ? 2 : 1,
+    twinkle: Math.random() * Math.PI * 2,
+    speed: Math.random() * 0.002 + 0.0005
+  });
+}
+
+// Utility: draw single pixel (scaled in buffer coordinates = 1)
+function px(x,y,w=1,h=1, color='#000') {
+  bctx.fillStyle = color;
+  bctx.fillRect(Math.floor(x), Math.floor(y), w, h);
+}
+
+// Draw background gradient (pixel-style: vertical bands)
+function drawSky() {
+  // simple vertical gradient painted per-scanline for pixel look
+  for (let y = 0; y < PIXEL_H; y++) {
+    const t = y / PIXEL_H;
+    // mix palette.skyTop and palette.skyBottom but keep pixel look
+    const r1 = hexToRgb(palette.skyTop);
+    const r2 = hexToRgb(palette.skyBottom);
+    const r = Math.round(r1.r * (1 - t) + r2.r * t);
+    const g = Math.round(r1.g * (1 - t) + r2.g * t);
+    const b = Math.round(r1.b * (1 - t) + r2.b * t);
+    bctx.fillStyle = `rgb(${r},${g},${b})`;
+    bctx.fillRect(0, y, PIXEL_W, 1);
+  }
+}
+
+// Draw distant rolling hills (blocky)
+function drawHills(offset) {
+  // two layers of silhouette mountains for depth
+  bctx.fillStyle = palette.mountain2;
+  const mid = PIXEL_H * 0.55;
+  bctx.beginPath();
+  bctx.moveTo(0, PIXEL_H);
+  for (let x = 0; x <= PIXEL_W; x++) {
+    const ang = (x / PIXEL_W) * Math.PI * 1.5 + offset * 0.6;
+    const h = Math.sin(ang * 0.9) * 6 + Math.cos(ang * 1.4) * 8;
+    bctx.lineTo(x, mid + h - 6);
+  }
+  bctx.lineTo(PIXEL_W, PIXEL_H);
+  bctx.closePath();
+  bctx.fill();
+
+  bctx.fillStyle = palette.mountain1;
+  bctx.beginPath();
+  bctx.moveTo(0, PIXEL_H);
+  for (let x = 0; x <= PIXEL_W; x++) {
+    const ang = (x / PIXEL_W) * Math.PI * 1.1 + offset * 0.3;
+    const h = Math.sin(ang * 0.7) * 8 + Math.cos(ang * 0.8) * 5;
+    bctx.lineTo(x, mid + h + 6);
+  }
+  bctx.lineTo(PIXEL_W, PIXEL_H);
+  bctx.closePath();
+  bctx.fill();
+}
+
+// Draw stars and moon
+function drawStars(time) {
+  // moon (soft) - only one
+  const moonX = PIXEL_W * 0.8 + Math.sin(time*0.0003)*6;
+  const moonY = PIXEL_H * 0.18 + Math.cos(time*0.0004)*3;
+  // soft circle by pixels
+  for (let dy = -5; dy <= 5; dy++) {
+    for (let dx = -5; dx <= 5; dx++) {
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 5.2) {
+        const alpha = Math.max(0, 1 - (dist / 5.2));
+        const c = hexToRgb(palette.moon);
+        bctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${alpha*0.95})`;
+        bctx.fillRect(Math.round(moonX+dx), Math.round(moonY+dy), 1, 1);
+      }
+    }
+  }
+
+  // stars twinkle
+  for (let s of STARS) {
+    s.twinkle += s.speed * 2;
+    const a = 0.6 + Math.sin(s.twinkle) * 0.4;
+    bctx.globalAlpha = a;
+    bctx.fillStyle = palette.star;
+    if (s.size === 2) {
+      bctx.fillRect(Math.round(s.x), Math.round(s.y), 2, 2);
+    } else {
+      bctx.fillRect(Math.round(s.x), Math.round(s.y), 1, 1);
+    }
+    bctx.globalAlpha = 1;
+  }
+}
+
+// Draw foreground grass (pixel clusters)
+function drawGrass(offset) {
+  const baseY = Math.floor(PIXEL_H * 0.74);
+  // ground rectangle
+  bctx.fillStyle = '#0b2113';
+  bctx.fillRect(0, baseY, PIXEL_W, PIXEL_H - baseY);
+
+  // grass blades as small clusters
+  for (let i = 0; i < 140; i++) {
+    const x = Math.floor(((i * 37) % PIXEL_W) + (Math.sin(i*0.3 + offset*0.04) * 2));
+    const h = 2 + Math.floor(Math.abs(Math.sin(i*0.7 + offset*0.02))*3);
+    const col = palette.grass[i % palette.grass.length];
+    for (let yy = 0; yy < h; yy++) {
+      bctx.fillStyle = col;
+      bctx.fillRect(x, baseY - yy - Math.floor(Math.abs(Math.cos(i*0.9))*1), 1, 1);
+      // occasional lighter tip
+      if (Math.random() < 0.02) {
+        bctx.fillStyle = '#80c080';
+        bctx.fillRect(x, baseY - h - 1, 1, 1);
+      }
+    }
+  }
+}
+
+// Simple shadow ellipse at given center
+function drawShadow(cx, cy, w, h) {
+  bctx.fillStyle = 'rgba(0,0,0,0.28)';
+  // pixel ellipse approximation
+  for (let y=-h; y<=h; y++) {
+    const rowWidth = Math.round(w * Math.sqrt(1 - (y*y)/(h*h) || 0));
+    for (let x=-rowWidth; x<=rowWidth; x++) {
+      bctx.fillRect(cx + x, cy + y, 1, 1);
+    }
+  }
+}
+
+// DRAW PIXEL SPRITE: knight (simple but detailed pixel-block)
+function drawKnight(x, y, flip=false) {
+  // draw with blocks to keep pixel look
+  // body base
+  const m1 = palette.knightMetal[0];
+  const m2 = palette.knightMetal[1];
+  const m3 = palette.knightMetal[2];
+  const cloth1 = palette.knightCloth[0];
+  const cloth2 = palette.knightCloth[1];
+
+  // helmet
+  for (let yy=0; yy<6; yy++) {
+    for (let xx=0; xx<6; xx++) {
+      const pxX = x + (flip ? (6-1-xx) : xx);
+      const pxY = y + yy;
+      const color = (yy<2 || (yy===2 && (xx===2||xx===3))) ? m1 : (yy<4? m2 : m3);
+      bctx.fillStyle = color;
+      bctx.fillRect(pxX, pxY, 1, 1);
+    }
+  }
+  // visor slit (dark)
+  bctx.fillStyle = '#2a343a';
+  bctx.fillRect(x+1, y+2, 4, 1);
+
+  // torso (armored chest)
+  for (let yy=6; yy<14; yy++) {
+    for (let xx=0; xx<8; xx++) {
+      const pxX = x + (flip ? (7-xx) : xx);
+      const pxY = y + yy;
+      const color = (yy<9) ? m2 : m1;
+      bctx.fillStyle = color;
+      bctx.fillRect(pxX, pxY, 1, 1);
+    }
+  }
+
+  // pauldrons (shoulder guards)
+  bctx.fillStyle = m3;
+  bctx.fillRect(x-1, y+6, 1, 3);
+  bctx.fillRect(x+8, y+6, 1, 3);
+
+  // cloak drape behind
+  for (let yy=8; yy<18; yy++) {
+    for (let xx=-3; xx<0; xx++) {
+      if (Math.random() > 0.18) {
+        bctx.fillStyle = cloth1;
+        bctx.fillRect(x+xx, y+yy, 1, 1);
+      }
+    }
+  }
+
+  // legs
+  for (let yy=14; yy<22; yy++) {
+    for (let xx=1; xx<7; xx++) {
+      bctx.fillStyle = m2;
+      bctx.fillRect(x+xx, y+yy, 1, 1);
+    }
+  }
+
+  // boots (darker)
+  bctx.fillStyle = m3;
+  bctx.fillRect(x+1, y+22, 2, 1);
+  bctx.fillRect(x+4, y+22, 2, 1);
+
+  // sword (behind shoulder) — vertical rectangle with handle
+  bctx.fillStyle = '#5a4f4a';
+  bctx.fillRect(x-2, y-15, 2, 6);
+  bctx.fillStyle = '#8a7a6d';
+  bctx.fillRect(x-2, y-16, 2, 1);
+}
+
+// DRAW PIXEL SPRITE: wolf (lying down)
+function drawWolf(x, y) {
+  const f1 = palette.wolfFur[0];
+  const f2 = palette.wolfFur[1];
+  const f3 = palette.wolfFur[2];
+  // belly
+  for (let yy=0; yy<6; yy++) {
+    for (let xx=0; xx<14; xx++) {
+      bctx.fillStyle = (xx<3 || xx>10) ? f2 : f1;
+      bctx.fillRect(x+xx, y+yy, 1, 1);
+    }
+  }
+  // head
+  for (let yy=-3; yy<3; yy++) {
+    for (let xx=-6; xx<0; xx++) {
+      const c = (yy=== -3 || xx > -2) ? f1 : f2;
+      bctx.fillStyle = c;
+      bctx.fillRect(x+xx, y+yy+2, 1, 1);
+    }
+  }
+  // ear
+  bctx.fillStyle = f3;
+  bctx.fillRect(x-4, y-1, 1, 1);
+  // eye (small)
+  bctx.fillStyle = '#1b1b1b';
+  bctx.fillRect(x-2, y+0, 1, 1);
+
+  // tail
+  for (let i=0;i<6;i++){
+    bctx.fillStyle = (i%2?f2:f1);
+    bctx.fillRect(x+14+i, y+1+i%2, 1, 1);
+  }
+}
+
+// CAMPFIRE: spawn particles and draw with glow
+function spawnFire() {
+  const baseX = PIXEL_W * 0.54 + (Math.random()*6-3) + cameraX*0.03;
+  const baseY = Math.floor(PIXEL_H * 0.74) - 8;
+  // flame particles
+  for (let i=0;i<3;i++){
+    fireParticles.push({
+      x: baseX + (Math.random()*6-3),
+      y: baseY + Math.random()*2,
+      vx: (Math.random()*0.6-0.3),
+      vy: - (Math.random()*1.2 + 0.6),
+      life: 40 + Math.random()*30,
+      age: 0,
+      colorIdx: Math.floor(Math.random()*palette.fireColors.length)
+    });
+  }
+  // sparks occasionally
+  if (Math.random() < 0.06) {
+    fireParticles.push({
+      x: baseX,
+      y: baseY-1,
+      vx: (Math.random()*2-1),
+      vy: - (Math.random()*2 + 1.2),
+      life: 80,
+      age: 0,
+      colorIdx: 2
+    });
+  }
+
+  // smoke
+  if (Math.random() < 0.9) { // more continuous smoke
+    smokeParticles.push({
+      x: baseX + (Math.random()*6-3),
+      y: baseY - 2,
+      vx: (Math.random()*0.3-0.15),
+      vy: - (Math.random()*0.2 + 0.12),
+      life: 130 + Math.random()*80,
+      age: 0,
+      size: 2 + Math.random()*2
+    });
+  }
+}
+
+function updateParticles() {
+  for (let p of fireParticles) {
+    p.age++;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vx *= 0.98;
+    p.vy *= 0.99;
+  }
+  // remove dead
+  for (let i = fireParticles.length-1; i>=0; i--) {
+    if (fireParticles[i].age > fireParticles[i].life) fireParticles.splice(i,1);
+  }
+
+  // smoke update
+  for (let s of smokeParticles) {
+    s.age++;
+    s.x += s.vx + (Math.sin(s.age*0.02)*0.02);
+    s.y += s.vy - Math.abs(Math.sin(s.age*0.01))*0.01;
+    s.vx *= 0.995;
+  }
+  for (let i = smokeParticles.length-1; i>=0; i--) {
+    if (smokeParticles[i].age > smokeParticles[i].life) smokeParticles.splice(i,1);
+  }
+}
+
+// draw fire + glow
+function drawCampfire(time) {
+  const baseX = Math.round(PIXEL_W * 0.54 + cameraX*0.03);
+  const baseY = Math.floor(PIXEL_H * 0.74) - 8;
+
+  // ring of stones
+  bctx.fillStyle = palette.rock;
+  for (let i=-5;i<=6;i+=2) bctx.fillRect(baseX+i, baseY+6, 2, 1);
+  for (let i=-6;i<=7;i+=3) bctx.fillRect(baseX+i, baseY+5, 1, 1);
+
+  // fire particles (draw brighter ones last)
+  fireParticles.sort((a,b)=>a.age-b.age);
+  for (let p of fireParticles) {
+    const t = p.age / p.life;
+    const alpha = Math.max(0, 1 - t);
+    const color = palette.fireColors[p.colorIdx % palette.fireColors.length];
+    const c = hexToRgb(color);
+    bctx.globalAlpha = alpha;
+    // size depends on life stage
+    const size = 1 + Math.round((1 - t) * 2);
+    bctx.fillStyle = `rgb(${c.r},${c.g},${c.b})`;
+    bctx.fillRect(Math.round(p.x), Math.round(p.y), size, size);
+    bctx.globalAlpha = 1;
+  }
+
+  // subtle fire center glow (pixel radial)
+  for (let r = 0; r < 5; r++) {
+    const a = 0.18 * (1 - r/6);
+    const c = hexToRgb('#ffb07a');
+    bctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${a})`;
+    const rr = r + Math.floor(Math.sin(time*0.01 + baseX)*0.6);
+    bctx.fillRect(baseX - rr, baseY - rr + 1, rr*2+1, rr*1);
+  }
+
+  // smoke (translucent)
+  for (let s of smokeParticles) {
+    const t = s.age / s.life;
+    const a = (1 - t) * 0.28;
+    bctx.fillStyle = `rgba(200,200,200,${a})`;
+    const size = Math.round(s.size + t*3);
+    bctx.fillRect(Math.round(s.x), Math.round(s.y), size, size);
+  }
+}
+
+// Helper: convert hex "#rrggbb" to object
+function hexToRgb(hex) {
+  const h = hex.replace('#','');
+  return { r: parseInt(h.substring(0,2),16), g: parseInt(h.substring(2,4),16), b: parseInt(h.substring(4,6),16) };
+}
+
+// Main render loop
+let last = performance.now();
+let acc = 0;
+let spawnTimer = 0;
+let offset = 0;
+function loop(now) {
+  const dt = now - last;
+  last = now;
+  offset += dt * 0.0003;
+  // update camera smoothing
+  cameraX += (cameraTarget.x - cameraX) * 0.06;
+
+  // background
+  drawSky();
+  drawStars(now);
+  drawHills(offset);
+  drawGrass(offset);
+
+  // shadows for objects
+  drawShadow(Math.round(PIXEL_W * 0.54 + cameraX*0.02), Math.floor(PIXEL_H * 0.74) - 2, 8, 2);
+
+  // spawn fire periodically
+  spawnTimer += dt;
+  if (spawnTimer > 60) { spawnTimer = 0; spawnFire(); }
+  updateParticles();
+
+  // draw campfire (with particles)
+  drawCampfire(now);
+
+  // draw knight and wolf with pixel offsets and a bit of breathing animation
+  const knightX = Math.round(PIXEL_W * 0.52 + Math.sin(now*0.002)*1 + cameraX*0.02);
+  const knightY = Math.floor(PIXEL_H * 0.74) - 28 + Math.sin(now*0.0025)*0.6;
+  drawKnight(knightX, knightY);
+
+  const wolfX = Math.round(PIXEL_W * 0.46 + Math.cos(now*0.0012)*0.5 + cameraX*0.02);
+  const wolfY = Math.floor(PIXEL_H * 0.74) - 22 + Math.cos(now*0.0016)*0.5;
+  drawWolf(wolfX, wolfY);
+
+  // foreground little rocks / flowers for detail
+  for (let i=0;i<8;i++){
+    const rx = Math.floor((i*31 + Math.sin(i*0.3+offset)*4 + cameraX*0.01) % PIXEL_W);
+    const ry = Math.floor(PIXEL_H*0.74 + (Math.sin(i*0.5+offset)*1.2));
+    bctx.fillStyle = '#6a5b4e';
+    bctx.fillRect(rx, ry, 1 + (i%3?0:1), 1);
+    if (i%4===0) {
+      bctx.fillStyle = '#fff8e8';
+      bctx.fillRect(rx+1, ry-1, 1, 1);
+    }
+  }
+
+  // copy buffer to visible canvas with integer scaling to preserve pixel look
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0,0,screen.width, screen.height);
+  ctx.drawImage(buffer, 0, 0, PIXEL_W, PIXEL_H, 0, 0, PIXEL_W * scale, PIXEL_H * scale);
+
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// Input: left/right camera shift
+window.addEventListener('keydown', (e)=>{
+  if (e.key === 'ArrowLeft') cameraTarget.x -= 6;
+  if (e.key === 'ArrowRight') cameraTarget.x += 6;
+});
+
+// UI: music toggle (music src intentionally empty; add your own loop URL)
+const music = document.getElementById('music');
+const musicToggle = document.getElementById('musicToggle');
+let musicOn = false;
+musicToggle.addEventListener('click', ()=>{
+  if (!musicOn) {
+    // If user hasn't set a source, try to use a small default (none by default).
+    if (!music.querySelector('source').src) {
+      // create gentle synthetic loop using WebAudio for safety
+      // we will create a soft looped ambient using Oscillators & noise
+      try {
+        createAmbientAudio();
+      } catch(e) {
+        alert('No audio source provided and WebAudio failed. Please set an audio src or allow audio.');
+      }
+    } else {
+      music.play().catch(()=>{ /* autoplay may be blocked */ });
+    }
+    musicOn = true;
+    musicToggle.textContent = 'Music: On';
+  } else {
+    // stop audio
+    if (music._ambientNode) { stopAmbientAudio(); }
+    music.pause();
+    musicOn = false;
+    musicToggle.textContent = 'Music: Off';
+  }
+});
+
+// Create a gentle ambient using WebAudio if no file was provided
+let audioCtx, ambientNodes;
+function createAmbientAudio(){
+  if (!window.AudioContext && !window.webkitAudioContext) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const master = audioCtx.createGain();
+  master.gain.value = 0.18;
+  master.connect(audioCtx.destination);
+
+  // gentle chord pad via multiple detuned oscillators
+  const freqs = [110, 146.83, 185]; // A2, D3, F#3-ish for moody chord
+  const nodes = [];
+  for (let i=0;i<3;i++){
+    const o = audioCtx.createOscillator();
+    const gm = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.value = freqs[i] * (1 + (Math.random()*0.02-0.01));
+    gm.gain.value = 0.0;
+    o.connect(gm);
+    gm.connect(master);
+    o.start();
+    // slow LFO on gain to create breathing pad
+    const lfo = audioCtx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.value = 0.03 + Math.random()*0.02;
+    const lfoGain = audioCtx.createGain();
+    lfoGain.gain.value = 0.04 + Math.random()*0.02;
+    lfo.connect(lfoGain);
+    lfoGain.connect(gm.gain);
+    lfo.start();
+    nodes.push({o,gm,lfo,lfoGain});
+  }
+
+  // light crackle using noise buffer
+  const bufferSize = audioCtx.sampleRate * 2;
+  const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = noiseBuffer.getChannelData(0);
+  for (let i=0;i<bufferSize;i++){
+    data[i] = (Math.random()*2-1) * 0.002;
+  }
+  const nb = audioCtx.createBufferSource();
+  nb.buffer = noiseBuffer;
+  nb.loop = true;
+  const ng = audioCtx.createGain();
+  ng.gain.value = 0.05;
+  nb.connect(ng);
+  ng.connect(master);
+  nb.start();
+
+  ambientNodes = {audioCtx, master, nodes, nb, ng};
+  music._ambientNode = ambientNodes;
+}
+
+// Stop ambient
+function stopAmbientAudio(){
+  if (!ambientNodes) return;
+  for (const n of ambientNodes.nodes) {
+    n.o.stop();
+    n.lfo.stop();
+  }
+  ambientNodes.nb.stop();
+  ambientNodes = null;
+  if (audioCtx && audioCtx.close) audioCtx.close();
+}
+
+// Boot note: if you want to add an mp3 file, set:
+// document.querySelector('#music source').src = 'https://example.com/your-lofi-loop.mp3';
+// then call music.load() and toggle music on.
+
+</script>
 </body>
 </html>
