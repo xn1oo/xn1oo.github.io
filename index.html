@@ -1,642 +1,157 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Pixel Campfire — Knight & Wolf</title>
-<style>
-  html,body{height:100%;margin:0;background:#060812;display:flex;align-items:center;justify-content:center}
-  #screen{ image-rendering: pixelated; image-rendering: crisp-edges; background:#060812; display:block; }
-  #ui{ position:fixed; left:12px; top:12px; color:#dfe9f3; font-family:Inter, Arial, sans-serif; display:flex; gap:10px; align-items:center; }
-  button{ background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.06); color:#fff; padding:6px 10px; border-radius:6px; cursor:pointer}
-  #credits{ position:fixed; right:12px; bottom:12px; color:rgba(255,255,255,0.55); font-size:12px }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lofi Campfire Night</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+      background: black;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: url("file:///home/chronos/u-745b01e4f14b24798216641969fe39d2e721889a/MyFiles/Downloads/Screenshot%202025-10-12%208.58.49%20PM.png") no-repeat center center;
+      background-size: cover;
+      image-rendering: pixelated;
+      z-index: 0;
+      filter: brightness(1);
+    }
+
+    #canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    #glow {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(rgba(255, 120, 40, 0.5), transparent 70%);
+      bottom: 25%;
+      left: 48%;
+      transform: translate(-50%, 50%);
+      filter: blur(60px);
+      animation: flicker 2s infinite ease-in-out;
+      z-index: 2;
+    }
+
+    @keyframes flicker {
+      0%, 100% { opacity: 0.8; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.05); }
+    }
+
+    #music {
+      display: none;
+    }
+  </style>
 </head>
 <body>
-  <div id="ui">
-    <span>← → to pan • Space to toggle slow motion</span>
-    <button id="musicBtn">Music: Off</button>
-  </div>
-  <canvas id="screen"></canvas>
-  <div id="credits">Detailed pixel scene — code only</div>
+  <div id="bg"></div>
+  <canvas id="canvas"></canvas>
+  <div id="glow"></div>
+  <audio id="music" src="https://cdn.pixabay.com/audio/2022/03/14/audio_7b16a5a29d.mp3" autoplay loop></audio>
 
-<script>
-/*
-  Detailed pixel scene: Knight & Wolf by campfire.
-  - Uses offscreen low-res canvas (PIX_W x PIX_H)
-  - Sprites defined as string maps for clarity & density
-  - Integer scaling preserves pixel look
-*/
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
 
-// Canvas and scaling
-const canvas = document.getElementById('screen');
-const ctx = canvas.getContext('2d');
-const PIX_W = 320;
-const PIX_H = 180;
-let scale = 3;
-const buffer = document.createElement('canvas');
-buffer.width = PIX_W;
-buffer.height = PIX_H;
-const bctx = buffer.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-function resize() {
-  const winW = window.innerWidth, winH = window.innerHeight;
-  const s1 = Math.floor(winW / PIX_W);
-  const s2 = Math.floor(winH / PIX_H);
-  scale = Math.max(1, Math.min(s1 || 1, s2 || 1));
-  canvas.width = PIX_W * scale;
-  canvas.height = PIX_H * scale;
-  canvas.style.width = canvas.width + 'px';
-  canvas.style.height = canvas.height + 'px';
-}
-window.addEventListener('resize', resize);
-resize();
+    const stars = [];
+    for (let i = 0; i < 150; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * (canvas.height / 2),
+        r: Math.random() * 1.5,
+        opacity: Math.random(),
+        speed: 0.02 + Math.random() * 0.03
+      });
+    }
 
-// Palette (muted lofi)
-const PALETTE = {
-  transparent: null,
-  skyTop: '#0b1728',
-  skyBottom: '#0b2438',
-  moon: '#f9f4e6',
-  star: '#fff5d9',
-  mountainA: '#0f2a34',
-  mountainB: '#133842',
-  ground: '#16261d',
-  grass1: '#1f4b2f',
-  grass2: '#254f33',
-  grass3: '#2b5739',
-  rock: '#81736a',
-  ember: '#ffb569',
-  fire1: '#ffd68a',
-  fire2: '#ff9b5f',
-  fire3: '#ff603a',
-  smoke: '#cfcfcf',
-  lightWarm: '#ffcf9b',
-  metal1: '#c9d1d8',
-  metal2: '#9aa3aa',
-  metal3: '#6b7379',
-  cloth1: '#7a2b2b',
-  cloth2: '#531c1c',
-  fur1: '#cfcfcf',
-  fur2: '#9e9e9e',
-  fur3: '#6e6e6e',
-  black: '#0a0a0a'
-};
+    const embers = [];
+    for (let i = 0; i < 30; i++) {
+      embers.push({
+        x: window.innerWidth / 2 + (Math.random() * 80 - 40),
+        y: window.innerHeight * 0.75,
+        r: Math.random() * 3 + 2,
+        opacity: 0.6 + Math.random() * 0.4,
+        speedY: Math.random() * -0.7 - 0.3,
+        speedX: (Math.random() - 0.5) * 0.2
+      });
+    }
 
-// Helper: fill pixel in buffer
-function pix(x,y,color) {
-  if (!color) return;
-  bctx.fillStyle = color;
-  bctx.fillRect(Math.round(x), Math.round(y), 1, 1);
-}
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-// draw vertical gradient sky per-scanline for pixelated look
-function drawSky() {
-  const top = hexToRgb(PALETTE.skyTop);
-  const bot = hexToRgb(PALETTE.skyBottom);
-  for (let y=0;y<PIX_H;y++){
-    const t = y/PIX_H;
-    const r = Math.round(top.r*(1-t)+bot.r*t);
-    const g = Math.round(top.g*(1-t)+bot.g*t);
-    const b = Math.round(top.b*(1-t)+bot.b*t);
-    bctx.fillStyle = `rgb(${r},${g},${b})`;
-    bctx.fillRect(0,y,PIX_W,1);
-  }
-}
+      // twinkling stars
+      stars.forEach(star => {
+        star.opacity += star.speed * (Math.random() > 0.5 ? 1 : -1);
+        if (star.opacity < 0.2) star.opacity = 0.2;
+        if (star.opacity > 1) star.opacity = 1;
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
 
-// stars array
-const stars = [];
-for (let i=0;i<220;i++){
-  stars.push({ x: Math.random()*PIX_W, y: Math.random()*PIX_H*0.46, size: Math.random()<0.12?2:1, t:Math.random()*Math.PI*2, speed: (Math.random()*0.004+0.0008) });
-}
+      // floating embers
+      embers.forEach(e => {
+        e.y += e.speedY;
+        e.x += e.speedX;
+        e.opacity -= 0.002;
+        e.r -= 0.01;
 
-// draw stars & moon
-function drawStars(t) {
-  // moon
-  const mx = PIX_W*0.78 + Math.sin(t*0.0003)*6;
-  const my = PIX_H*0.18 + Math.cos(t*0.0004)*3;
-  // small soft moon
-  for (let dy=-4; dy<=4; dy++){
-    for (let dx=-4; dx<=4; dx++){
-      const d = Math.sqrt(dx*dx + dy*dy);
-      if (d < 4.8) {
-        const a = Math.max(0, 1 - d/4.8) * 0.95;
-        const c = hexToRgb(PALETTE.moon);
-        bctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${a})`;
-        bctx.fillRect(Math.round(mx+dx), Math.round(my+dy), 1,1);
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(255, ${150 + Math.random()*50}, 50, ${e.opacity})`;
+        ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // recycle embers
+      for (let i = embers.length - 1; i >= 0; i--) {
+        if (embers[i].opacity <= 0) {
+          embers[i] = {
+            x: window.innerWidth / 2 + (Math.random() * 80 - 40),
+            y: window.innerHeight * 0.75,
+            r: Math.random() * 3 + 2,
+            opacity: 0.8,
+            speedY: Math.random() * -0.7 - 0.3,
+            speedX: (Math.random() - 0.5) * 0.2
+          };
+        }
       }
+
+      requestAnimationFrame(animate);
     }
-  }
-  // stars
-  for (let s of stars) {
-    s.t += s.speed;
-    const a = 0.45 + Math.sin(s.t) * 0.4;
-    bctx.globalAlpha = a;
-    bctx.fillStyle = PALETTE.star;
-    if (s.size===2) bctx.fillRect(Math.round(s.x), Math.round(s.y), 2,2);
-    else bctx.fillRect(Math.round(s.x), Math.round(s.y), 1,1);
-    bctx.globalAlpha = 1;
-  }
-}
 
-// mountains (two silhouette layers)
-function drawMountains(offset) {
-  bctx.fillStyle = PALETTE.mountainB;
-  bctx.beginPath();
-  bctx.moveTo(0,PIX_H);
-  for (let x=0;x<=PIX_W;x++){
-    const h = Math.sin((x/PIX_W)*Math.PI*2 + offset*0.6)*6 + Math.cos((x/PIX_W)*Math.PI*1.2 + offset*0.4)*8;
-    bctx.lineTo(x, PIX_H*0.6 + h);
-  }
-  bctx.lineTo(PIX_W, PIX_H);
-  bctx.fill();
+    animate();
 
-  bctx.fillStyle = PALETTE.mountainA;
-  bctx.beginPath();
-  bctx.moveTo(0,PIX_H);
-  for (let x=0;x<=PIX_W;x++){
-    const h = Math.sin((x/PIX_W)*Math.PI*1.1 + offset*0.3)*10 + Math.cos((x/PIX_W)*Math.PI*0.9 + offset*0.2)*6;
-    bctx.lineTo(x, PIX_H*0.68 + h);
-  }
-  bctx.lineTo(PIX_W, PIX_H);
-  bctx.fill();
-}
-
-// foreground grass with pixel clusters
-function drawGrass(offset) {
-  const base = Math.floor(PIX_H * 0.74);
-  bctx.fillStyle = PALETTE.ground;
-  bctx.fillRect(0, base, PIX_W, PIX_H-base);
-
-  for (let i=0;i<150;i++){
-    const x = Math.floor((i*31 + Math.sin(i*0.5 + offset*0.02)*4) % PIX_W);
-    const h = 2 + Math.floor(Math.abs(Math.sin(i*0.3+offset*0.01))*3);
-    const color = [PALETTE.grass1, PALETTE.grass2, PALETTE.grass3][i%3];
-    for (let yy=0; yy<h; yy++){
-      bctx.fillStyle = color;
-      bctx.fillRect(x, base - yy - Math.round(Math.abs(Math.cos(i*0.9))*1), 1,1);
-    }
-  }
-}
-
-// shadows helper
-function drawShadow(cx, cy, w, h) {
-  bctx.fillStyle = 'rgba(0,0,0,0.3)';
-  for (let y=-h; y<=h; y++) {
-    const rowW = Math.round(w * Math.sqrt(1 - (y*y)/(h*h) || 0));
-    for (let x=-rowW; x<=rowW; x++){
-      bctx.fillRect(cx + x, cy + y, 1,1);
-    }
-  }
-}
-
-/* --- Sprites: string maps using characters mapped to palette keys
-   - Each sprite frame is an array of strings (rows)
-   - Characters: '.' = transparent, letters map to palette entries in SPR_COLORS
-*/
-
-// Knight frames (3 frames: idle, slight head shift, small breath)
-// Frame size: 20 (w) x 28 (h) - centered when drawing
-const KNIGHT_W = 20, KNIGHT_H = 28;
-const KNIGHT_FRAMES = [
-`....................
-......aa..aa........
-.....abaaaaab.......
-....acaaaaaaaa......
-....acaaaaaaad......
-....acaaaaaaad......
-....acaaaaaaad......
-....aeaaaaaaaf......
-....aggghhhfff......
-....aijjkkllfff.....
-....immmnnnffo......
-.....ppqqqqr........
-.....psssstr........
-.....psssstr........
-.....ptttttr........
-.....puuvvvr........
-.....puuvvvr........
-.....puuvvvr........
-.....pwwxxr.........
-.....pyyxxr.........
-.....pyyxxr.........
-.....pyyxxr.........
-.....pzz..r.........
-.....p..bbr.........
-.....p..bbr.........
-.....p..bbr.........
-.....p..bbr.........
-.....p..bbr.........`,
-`....................
-......aa..aa........
-.....abaaaaab.......
-....acaaaaaaaa......
-....acaaaaaaad......
-....acaaaaaaad......
-....acaaaaaaad......
-....aeaaaaaaaf......
-....aggghhhfff......
-....aijjkkllfff.....
-....immmnnnffo......
-.....ppqqqqr........
-.....psssstr........
-.....psssstr........
-.....ptttttr........
-.....puuvvvr........
-.....puuvvvr........
-.....puuvvvr........
-.....pwwxxr.........
-.....pyyxxr.........
-.....pyyxxr.........
-.....pyyxxr.........
-.....pzz..r.........
-.....p..bbr.........
-.....p..bbr.........
-.....p..bbr.........
-.....p..bbr.........
-.....p..bbr.........`,
-`....................
-......aa..aa........
-.....abaaaaab.......
-....acaaaaaaaa......
-....acaaaaaaad......
-....acaaaaaaad......
-....acaaaaaaad......
-....aeaaaaaaaf......
-....aggghhhfff......
-....aijjkkllfff.....
-....immmnnnffo......
-.....ppqqqqr........
-.....psssstr........
-.....psssstr........
-.....ptttttr........
-.....puuvvvr........
-.....puuvvvr........
-.....puuvvvr........
-.....pwwxxr.........
-.....pyyxxr.........
-.....pyyxxr.........
-.....pyyxxr.........
-.....pzz..r.........
-.....p..bbr.........
-.....p..bbr.........
-.....p..bbr.........
-.....p..bbr.........
-.....p..bbr.........`
-];
-
-// Wolf frames (2 frames) lying down, breathable chest
-const WOLF_W = 28, WOLF_H = 12;
-const WOLF_FRAMES = [
-`...........ccc....ccc............
-.........ccccc...ccccc...........
-........cccccc..cccccc...........
-.......ccccccc..ccccccc..........
-......ccccccccc.ccccc............
-.....cccccccccccccccc.............
-....cccccccccccccccccc............
-....cccccdddcccccccccddc..........
-...cccdddddccccccddddddc.........
-...ccddddeeeccccdeeeedddc........
-....ccddd..eeeccc.eee..ddc.......
-.....cc....eee...eee....cc.......`,
-`...........ccc....ccc............
-.........ccccc...ccccc...........
-........cccccc..cccccc...........
-.......ccccccc..ccccccc..........
-......ccccccccc.ccccc............
-.....cccccccccccccccc.............
-....cccccccccccccccccc............
-....cccccdddcccccccccddc..........
-...cccdddddccccccddddddc.........
-...ccddddeeeccccdeeeedddc........
-....ccddd..eeeccc.eee..ddc.......
-.....cc....eee...eee....cc.......`
-];
-
-// Palette mapping for sprite chars
-const SPR_COLORS = {
-  // knight: a..z etc.
-  a: PALETTE.metal1, b: PALETTE.metal2, c: PALETTE.metal1, d: PALETTE.metal3,
-  e: PALETTE.metal2, f: PALETTE.black, g: PALETTE.metal3, h: PALETTE.metal2,
-  i: PALETTE.cloth1, j: PALETTE.cloth2, k: PALETTE.metal2, l: PALETTE.metal3,
-  m: PALETTE.metal1, n: PALETTE.metal2, o: PALETTE.black, p: PALETTE.metal2,
-  q: PALETTE.metal2, r: PALETTE.metal3, s: PALETTE.cloth1, t: PALETTE.cloth2,
-  u: PALETTE.metal1, v: PALETTE.metal2, w: PALETTE.metal3, x: PALETTE.metal2,
-  y: PALETTE.metal1, z: PALETTE.metal3
-};
-
-// Wolf mapping
-const WOLF_COLORS = {
-  c: PALETTE.fur1, d: PALETTE.fur2, e: PALETTE.fur3
-};
-
-// Draw sprite function (frame map array, width, height, color map)
-function drawSprite(map, w, h, colors, dx, dy, flip=false, lightMask=null) {
-  // map is a single string per frame, but we'll accept arrays of rows OR single string with newlines
-  for (let row=0; row<h; row++){
-    const line = map[row];
-    for (let col=0; col<w; col++){
-      const ch = line[col] || '.';
-      if (ch === '.') continue;
-      const color = colors[ch] || null;
-      if (!color) continue;
-      let px = dx + (flip ? (w-1-col) : col);
-      let py = dy + row;
-      // apply light mask if present: modifier to color brightness
-      if (lightMask) {
-        // sample mask alpha in [-1..1], where pos warms
-        const m = lightMask(Math.round(px), Math.round(py));
-        // convert hex to rgb, scale
-        const rgb = hexToRgb(color);
-        const r = clamp(Math.round(rgb.r * (1 + m)), 0, 255);
-        const g = clamp(Math.round(rgb.g * (1 + m*0.8)), 0, 255);
-        const b = clamp(Math.round(rgb.b * (1 + m*0.6)), 0, 255);
-        bctx.fillStyle = `rgb(${r},${g},${b})`;
-      } else {
-        bctx.fillStyle = color;
-      }
-      bctx.fillRect(px, py, 1,1);
-    }
-  }
-}
-
-// clamp helper
-function clamp(v,a,b){return Math.max(a, Math.min(b, v));}
-
-// Convert hex to rgb
-function hexToRgb(hex){
-  const h = hex.replace('#','');
-  return { r: parseInt(h.substr(0,2),16), g: parseInt(h.substr(2,2),16), b: parseInt(h.substr(4,2),16) };
-}
-
-/* --- Campfire & particles --- */
-const fireParticles = [];
-const smokeParticles = [];
-
-function spawnFire(baseX, baseY) {
-  // flame particles
-  for (let i=0;i<4;i++){
-    fireParticles.push({
-      x: baseX + (Math.random()*4-2),
-      y: baseY + (Math.random()*2-1),
-      vx: (Math.random()*0.8-0.4),
-      vy: - (Math.random()*1.4 + 0.6),
-      life: 40 + Math.random()*30,
-      age: 0,
-      color: [PALETTE.fire1, PALETTE.fire2, PALETTE.fire3][Math.floor(Math.random()*3)],
-      size: 1 + Math.random()*2
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     });
-  }
-  // embers sometimes
-  if (Math.random() < 0.08) {
-    fireParticles.push({
-      x: baseX,
-      y: baseY-1,
-      vx: Math.random()*2-1,
-      vy: - (Math.random()*2 + 0.6),
-      life: 80,
-      age: 0,
-      color: PALETTE.ember,
-      size: 1
-    });
-  }
-  // smoke
-  if (Math.random() < 0.75) {
-    smokeParticles.push({
-      x: baseX + (Math.random()*4-2),
-      y: baseY - 2,
-      vx: (Math.random()*0.2 - 0.1),
-      vy: - (Math.random()*0.12 + 0.06),
-      life: 120 + Math.random()*80,
-      age: 0,
-      size: 2 + Math.random()*2
-    });
-  }
-}
-
-function updateParticles() {
-  for (let p of fireParticles) {
-    p.age++;
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vx *= 0.98;
-    p.vy *= 0.997;
-  }
-  for (let i=fireParticles.length-1;i>=0;i--) if (fireParticles[i].age > fireParticles[i].life) fireParticles.splice(i,1);
-
-  for (let s of smokeParticles) {
-    s.age++;
-    s.x += s.vx + (Math.sin(s.age*0.02)*0.01);
-    s.y += s.vy - Math.abs(Math.sin(s.age*0.01))*0.01;
-    s.vx *= 0.995;
-  }
-  for (let i=smokeParticles.length-1;i>=0;i--) if (smokeParticles[i].age > smokeParticles[i].life) smokeParticles.splice(i,1);
-}
-
-function drawFire(baseX, baseY, t) {
-  // stones
-  bctx.fillStyle = PALETTE.rock;
-  for (let sx=-6; sx<=6; sx+=2) bctx.fillRect(Math.round(baseX+sx), baseY+5, 2,1);
-  // fire particles (sorted back-to-front)
-  fireParticles.sort((a,b)=>a.age-b.age);
-  for (let p of fireParticles) {
-    const lifeT = p.age / p.life;
-    const a = Math.max(0, 1 - lifeT);
-    const rgb = hexToRgb(p.color);
-    bctx.globalAlpha = a;
-    const sz = Math.max(1, Math.round(p.size * (1 - lifeT) + 0.25));
-    bctx.fillStyle = `rgb(${rgb.r},${rgb.g},${rgb.b})`;
-    bctx.fillRect(Math.round(p.x), Math.round(p.y), sz, sz);
-    bctx.globalAlpha = 1;
-  }
-  // glow center (pixel radial)
-  for (let r=0;r<6;r++){
-    const a = 0.15*(1 - r/6);
-    const c = hexToRgb(PALETTE.lightWarm);
-    bctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${a})`;
-    const rr = r + Math.round(Math.sin(t*0.008 + baseX)*0.6);
-    bctx.fillRect(Math.round(baseX - rr), baseY - rr + 1, rr*2+1, rr+1);
-  }
-  // smoke
-  for (let s of smokeParticles) {
-    const lifeT = s.age / s.life;
-    const a = (1 - lifeT) * 0.28;
-    bctx.fillStyle = `rgba(220,220,220,${a})`;
-    const size = Math.round(s.size + lifeT*3);
-    bctx.fillRect(Math.round(s.x), Math.round(s.y), size, size);
-  }
-}
-
-/* --- Light mask helper: returns multiplier for warmth [-0.3 .. +0.6] based on distance to fire --- */
-function makeLightMask(cx, cy) {
-  return function(px, py) {
-    const dx = px - cx;
-    const dy = py - cy;
-    const d = Math.sqrt(dx*dx + dy*dy);
-    const radius = 20;
-    if (d > radius) return 0;
-    const t = 1 - (d / radius); // 1 near, 0 far
-    // make center warmer and brighter
-    return 0.35 * t + 0.25 * t * (1 - (py - cy)/radius);
-  };
-}
-
-/* --- Sprite draw wrapper providing light effect from fire --- */
-function drawKnightWithLight(frameIndex, dx, dy, lightMask) {
-  drawSprite(KNIGHT_FRAMES[frameIndex % KNIGHT_FRAMES.length].split('\n'), KNIGHT_W, KNIGHT_H, SPR_COLORS, dx, dy, false, lightMask);
-}
-function drawWolfWithLight(frameIndex, dx, dy, lightMask) {
-  drawSprite(WOLF_FRAMES[frameIndex % WOLF_FRAMES.length].split('\n'), WOLF_W, WOLF_H, WOLF_COLORS, dx, dy, false, lightMask);
-}
-
-/* --- Main loop --- */
-let last = performance.now();
-let offset = 0;
-let spawnTimer = 0;
-let cameraX = 0, cameraTarget = 0;
-let tFrame = 0;
-let slow = 1;
-
-function loop(now) {
-  const dt = (now - last) * 0.001 * slow; // seconds factor
-  last = now;
-  offset += dt * 0.8;
-  tFrame += (now - last) * 0.001;
-
-  // Clear buffer
-  bctx.clearRect(0,0,PIX_W,PIX_H);
-
-  // Background
-  drawSky();
-  drawStars(now);
-  drawMountains(offset);
-  drawGrass(offset);
-
-  // camera smoothing
-  cameraX += (cameraTarget - cameraX) * 0.08;
-
-  // Campfire position (base)
-  const campX = Math.round(PIX_W * 0.542 + cameraX*0.02);
-  const campY = Math.floor(PIX_H * 0.74) - 8;
-
-  // spawn particles
-  spawnTimer += 1;
-  if (spawnTimer > 3) { spawnTimer = 0; spawnFire(campX + (Math.random()*2-1), campY); }
-  updateParticles();
-
-  // Shadow under characters
-  drawShadow(campX - 2, campY + 6, 12, 3);
-
-  // draw wolf (left of knight)
-  const wolfX = Math.round(campX - 24 + Math.cos(now*0.0012)*0.5 + cameraX*0.02);
-  const wolfY = Math.floor(PIX_H * 0.74) - 22 + Math.cos(now*0.0009)*0.5;
-  const lightMask = makeLightMask(campX, campY);
-  drawWolfWithLight(Math.floor(now*0.004)%2, wolfX, wolfY, lightMask);
-
-  // draw knight slightly right of camp
-  const knightX = Math.round(campX - 6 + Math.sin(now*0.0026)*0.4 + cameraX*0.02);
-  const knightY = Math.floor(PIX_H * 0.74) - 36 + Math.sin(now*0.0022)*0.6;
-  drawKnightWithLight(Math.floor(now*0.003)%3, knightX, knightY, lightMask);
-
-  // campfire & particles drawn after characters for overlap
-  drawFire(campX, campY, now);
-
-  // little foreground rocks
-  for (let i=0;i<10;i++){
-    const rx = Math.round((i*23 + Math.sin(i*0.4+offset)*3 + cameraX*0.02) % PIX_W);
-    const ry = Math.floor(PIX_H * 0.74 + Math.sin(i*0.2+offset)*0.5);
-    bctx.fillStyle = PALETTE.rock;
-    bctx.fillRect(rx, ry, 1 + (i%3?0:1), 1);
-  }
-
-  // copy buffer to screen with integer scaling
-  ctx.imageSmoothingEnabled = false;
-  ctx.clearRect(0,0,canvas.width, canvas.height);
-  ctx.drawImage(buffer, 0, 0, PIX_W, PIX_H, 0, 0, PIX_W * scale, PIX_H * scale);
-
-  requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
-
-/* --- Input: camera pan and slow-motion toggle --- */
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowLeft') cameraTarget -= 12;
-  if (e.key === 'ArrowRight') cameraTarget += 12;
-  if (e.key === ' '){ slow = slow === 1 ? 0.28 : 1; e.preventDefault(); }
-});
-
-/* --- Audio: create gentle ambient using WebAudio; toggle button --- */
-const musicBtn = document.getElementById('musicBtn');
-let audioCtx = null;
-let ambient = null;
-musicBtn.addEventListener('click', async () => {
-  if (!audioCtx) {
-    try {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      createAmbient(audioCtx);
-      musicBtn.textContent = 'Music: On';
-    } catch (err) {
-      alert('Audio context failed or blocked. Click to allow audio in your browser.');
-    }
-  } else {
-    // stop and clear
-    stopAmbient();
-    musicBtn.textContent = 'Music: Off';
-  }
-});
-
-function createAmbient(ctx) {
-  const master = ctx.createGain(); master.gain.value = 0.16; master.connect(ctx.destination);
-  // soft pad: multiple detuned saw/sine-ish oscillators with slow LFOs
-  const freqs = [110, 146.83, 185];
-  ambient = { nodes: [], noise: null, ctx, master };
-  for (let f of freqs) {
-    const o = ctx.createOscillator();
-    o.type = 'sine';
-    o.frequency.value = f * (1 + (Math.random()*0.02-0.01));
-    const g = ctx.createGain(); g.gain.value = 0.0;
-    o.connect(g); g.connect(master);
-    o.start();
-    // LFO
-    const lfo = ctx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 0.03 + Math.random()*0.02;
-    const lfoG = ctx.createGain(); lfoG.gain.value = 0.06 + Math.random()*0.02;
-    lfo.connect(lfoG); lfoG.connect(g.gain);
-    lfo.start();
-    ambient.nodes.push({o,g,lfo,lfoG});
-  }
-  // noise (very quiet crackle)
-  const bufferSize = ctx.sampleRate * 2;
-  const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const data = noiseBuffer.getChannelData(0);
-  for (let i=0;i<bufferSize;i++) data[i] = (Math.random()*2-1) * 0.002;
-  const nb = ctx.createBufferSource(); nb.buffer = noiseBuffer; nb.loop = true;
-  const ng = ctx.createGain(); ng.gain.value = 0.03;
-  nb.connect(ng); ng.connect(master); nb.start();
-  ambient.noise = nb;
-}
-
-function stopAmbient(){
-  if (!ambient) return;
-  for (let n of ambient.nodes) { try{ n.o.stop(); n.lfo.stop(); }catch(e){} }
-  try { ambient.noise.stop(); } catch(e){}
-  ambient = null;
-  try { audioCtx.close(); } catch(e){}
-  audioCtx = null;
-}
-
-/* --- Utility: spawn fire at x,y jitter wrapper for call sites --- */
-function spawnFire(x,y){ spawnFireAt(x,y) } // placeholder to prevent lint
-function spawnFireAt(x,y) {
-  // intentionally unused; we call spawnFire (local above) instead
-}
-
-// helpers: small function re-declarations to satisfy calls above
-function spawnFire(x,y){} // replaced by logic in main loop where spawnFire(campX,..) is used
-
-// small hex parse already defined above; ensure resize called once
-resize();
-
-</script>
+  </script>
 </body>
 </html>
